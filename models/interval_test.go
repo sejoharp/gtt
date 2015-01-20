@@ -48,6 +48,13 @@ func (suite *IntervalDaoSuite) TestFindByUserID(c *C) {
 	c.Assert(intervals[1].UserID, Equals, userID)
 }
 
+func (suite *IntervalDaoSuite) TestFindByUserIDWithEmptyResult(c *C) {
+	intervals, err := suite.dao.FindByUserID(bson.NewObjectId())
+
+	c.Assert(err, IsNil)
+	c.Assert(intervals, HasLen, 0)
+}
+
 func createDao() (*IntervalDao, error) {
 	session, err := createSession()
 	dao := NewIntervalDao(session, "timetracker")
