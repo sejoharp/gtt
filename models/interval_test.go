@@ -4,54 +4,48 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/franela/goblin"
+	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func Test(t *testing.T) {
-	var collection *mgo.Collection
-	var dao *IntervalDao
+type IntervalDaoSuite struct {
+	collection *mgo.Collection
+	dao        *IntervalDao
+}
 
-	g := Goblin(t)
-	g.Describe("IntervalDao", func() {
+func (suite *IntervalDaoSuite) SetUpTest(c *C) {
+	suite.dao, _ = createDao()
+	suite.collection = suite.dao.getDBCollection()
+	cleanCollection(suite.collection)
+}
 
-		g.BeforeEach(func() {
-			var err error
-			dao, err = createDao()
-			g.Assert(err).Equal(nil)
-			collection = dao.getDBCollection()
-			cleanCollection(collection)
-		})
+func (suite *IntervalDaoSuite) TestSave(c *C) {
+	userID := bson.NewObjectId()
+	now := time.Now()
 
-		g.It("should save an Interval", func() {
-			userID := bson.NewObjectId()
-			now := time.Now()
+	insertErr := suite.dao.Save(NewIntervalStart(userID, now))
 
-			insertErr := dao.Save(NewIntervalStart(userID, now))
+	c.Assert(insertErr, IsNil)
+	var interval Interval
+	findErr := suite.collection.Find(bson.M{"userid": userID}).One(&interval)
+	c.Assert(findErr, IsNil)
+	c.Assert(interval.Start.Unix(), Equals, now.Unix())
+	c.Assert(interval.UserID, Equals, userID)
+}
 
-			g.Assert(insertErr).Equal(nil)
-			var interval Interval
-			findErr := collection.Find(bson.M{"userid": userID}).One(&interval)
-			g.Assert(findErr).Equal(nil)
-			g.Assert(interval.Start.Unix()).Equal(now.Unix())
-			g.Assert(interval.UserID).Equal(userID)
-		})
+func (suite *IntervalDaoSuite) TestFindByUserID(c *C) {
+	userID := bson.NewObjectId()
+	suite.dao.Save(NewIntervalStart(userID, time.Now()))
+	suite.dao.Save(NewIntervalStart(userID, time.Now()))
+	suite.dao.Save(NewIntervalStart(bson.NewObjectId(), time.Now()))
 
-		g.It("should find all intervals by userID", func() {
-			userID := bson.NewObjectId()
-			dao.Save(NewIntervalStart(userID, time.Now()))
-			dao.Save(NewIntervalStart(userID, time.Now()))
-			dao.Save(NewIntervalStart(bson.NewObjectId(), time.Now()))
+	intervals, err := suite.dao.FindByUserID(userID)
 
-			intervals, err := dao.FindByUserID(userID)
-
-			g.Assert(err).Equal(nil)
-			g.Assert(len(intervals)).Equal(2)
-			g.Assert(intervals[0].UserID).Equal(userID)
-			g.Assert(intervals[1].UserID).Equal(userID)
-		})
-	})
+	c.Assert(err, IsNil)
+	c.Assert(intervals, HasLen, 2)
+	c.Assert(intervals[0].UserID, Equals, userID)
+	c.Assert(intervals[1].UserID, Equals, userID)
 }
 
 func createDao() (*IntervalDao, error) {
@@ -67,3 +61,7 @@ func createSession() (*mgo.Session, error) {
 func cleanCollection(collection *mgo.Collection) error {
 	return collection.DropCollection()
 }
+
+func Test(t *testing.T) { TestingT(t) }
+
+var _ = Suite(&IntervalDaoSuite{})
