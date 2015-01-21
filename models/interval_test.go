@@ -1,8 +1,9 @@
 package models_test
 
 import (
-	. "gtt/models"
 	"time"
+
+	. "github.com/zippelmann/gtt/models"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
