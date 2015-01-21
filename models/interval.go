@@ -33,12 +33,12 @@ func NewIntervalDao(session *mgo.Session, dbName string) *IntervalDao {
 }
 
 func (dao *IntervalDao) Save(interval Interval) error {
-	return dao.GetDBCollection().Insert(interval)
+	return dao.getDBCollection().Insert(interval)
 }
 
 func (dao *IntervalDao) FindByUserID(userID bson.ObjectId) ([]Interval, error) {
 	var intervals []Interval
-	err := dao.GetDBCollection().Find(bson.M{"userid": userID}).All(&intervals)
+	err := dao.getDBCollection().Find(bson.M{"userid": userID}).All(&intervals)
 	return intervals, err
 }
 
@@ -46,6 +46,6 @@ func (dao *IntervalDao) getDBConnection() *mgo.Database {
 	return dao.session.Clone().DB(dao.dbName)
 }
 
-func (dao *IntervalDao) GetDBCollection() *mgo.Collection {
+func (dao *IntervalDao) getDBCollection() *mgo.Collection {
 	return dao.getDBConnection().C(dao.collectionName)
 }
