@@ -1,59 +1,61 @@
-package models
+package models_test
 
 import (
-	"testing"
+	. "gtt/models"
 	"time"
 
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-type IntervalDaoSuite struct {
-	collection *mgo.Collection
-	dao        *IntervalDao
-}
+var _ = Describe("IntervalDao", func() {
+	var (
+		collection *mgo.Collection
+		dao        *IntervalDao
+	)
 
-func (suite *IntervalDaoSuite) SetUpTest(c *C) {
-	suite.dao, _ = createDao()
-	suite.collection = suite.dao.getDBCollection()
-	cleanCollection(suite.collection)
-}
+	BeforeEach(func() {
+		dao, _ = createDao()
+		collection = dao.GetDBCollection()
+		cleanCollection(collection)
+	})
 
-func (suite *IntervalDaoSuite) TestSave(c *C) {
-	userID := bson.NewObjectId()
-	now := time.Now()
+	It("should save an interval.", func() {
+		userID := bson.NewObjectId()
+		now := time.Now()
 
-	insertErr := suite.dao.Save(NewIntervalStart(userID, now))
+		insertErr := dao.Save(NewIntervalStart(userID, now))
 
-	c.Assert(insertErr, IsNil)
-	var interval Interval
-	findErr := suite.collection.Find(bson.M{"userid": userID}).One(&interval)
-	c.Assert(findErr, IsNil)
-	c.Assert(interval.Start.Unix(), Equals, now.Unix())
-	c.Assert(interval.UserID, Equals, userID)
-}
+		Expect(insertErr).To(BeNil())
+		var interval Interval
+		findErr := collection.Find(bson.M{"userid": userID}).One(&interval)
+		Expect(findErr).To(BeNil())
+		Expect(interval.Start.Unix()).To(Equal(now.Unix()))
+		Expect(interval.UserID).To(Equal(userID))
+	})
+	It("should find all by userID.", func() {
+		userID := bson.NewObjectId()
+		dao.Save(NewIntervalStart(userID, time.Now()))
+		dao.Save(NewIntervalStart(userID, time.Now()))
+		dao.Save(NewIntervalStart(bson.NewObjectId(), time.Now()))
 
-func (suite *IntervalDaoSuite) TestFindByUserID(c *C) {
-	userID := bson.NewObjectId()
-	suite.dao.Save(NewIntervalStart(userID, time.Now()))
-	suite.dao.Save(NewIntervalStart(userID, time.Now()))
-	suite.dao.Save(NewIntervalStart(bson.NewObjectId(), time.Now()))
+		intervals, err := dao.FindByUserID(userID)
 
-	intervals, err := suite.dao.FindByUserID(userID)
+		Expect(err).To(BeNil())
+		Expect(intervals).To(HaveLen(2))
+		Expect(intervals[0].UserID).To(Equal(userID))
+		Expect(intervals[1].UserID).To(Equal(userID))
+	})
 
-	c.Assert(err, IsNil)
-	c.Assert(intervals, HasLen, 2)
-	c.Assert(intervals[0].UserID, Equals, userID)
-	c.Assert(intervals[1].UserID, Equals, userID)
-}
+	It("should return an empty array when no intervals found", func() {
+		intervals, err := dao.FindByUserID(bson.NewObjectId())
 
-func (suite *IntervalDaoSuite) TestFindByUserIDWithEmptyResult(c *C) {
-	intervals, err := suite.dao.FindByUserID(bson.NewObjectId())
-
-	c.Assert(err, IsNil)
-	c.Assert(intervals, HasLen, 0)
-}
+		Expect(err).To(BeNil())
+		Expect(intervals).To(HaveLen(0))
+	})
+})
 
 func createDao() (*IntervalDao, error) {
 	session, err := createSession()
@@ -68,7 +70,3 @@ func createSession() (*mgo.Session, error) {
 func cleanCollection(collection *mgo.Collection) error {
 	return collection.DropCollection()
 }
-
-func Test(t *testing.T) { TestingT(t) }
-
-var _ = Suite(&IntervalDaoSuite{})
