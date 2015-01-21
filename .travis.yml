@@ -1,6 +1,6 @@
 language: go
 go:
-  - tip
+  - release
 
 install:
   - go get -v -t ./...
@@ -11,4 +11,4 @@ install:
 before_script:
   - export PATH=$HOME/gopath/bin:$PATH
 
-script: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2
+script: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --trace --race --compilers=2
