@@ -6,10 +6,8 @@ install:
   - go get -v -t ./...
   - go install github.com/onsi/ginkgo/ginkgo
 
-before_script:
-  - export PATH=$HOME/gopath/bin:$PATH
-
-script: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --trace --race --compilers=2
+script:
+  - ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --compilers=2
 
 services:
   - mongodb
