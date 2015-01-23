@@ -16,6 +16,9 @@ timetracker with golang
 # build status
 [![Build Status](https://travis-ci.org/zippelmann/gtt.svg?branch=master)](https://travis-ci.org/zippelmann/gtt)
 
+# useful commands
+* automatic testing: `ginkgo watch -r --randomizeAllSpecs --trace --race --compilers=2 --notify`
+
 # used projects
 * ginkgo
 * gomega
