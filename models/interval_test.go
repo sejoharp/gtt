@@ -127,7 +127,7 @@ var _ = Describe("IntervalDao", func() {
 		Expect(err.Error()).To(Equal("more than one open interval"))
 	})
 
-	It("should stop the last open interval.", func() {
+	It("should stop open interval.", func() {
 		userID := bson.NewObjectId()
 		dao.Start(userID)
 
