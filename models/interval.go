@@ -3,6 +3,8 @@ package models
 import (
 	"time"
 
+	"errors"
+
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -49,6 +51,45 @@ func (dao *IntervalDao) FindByUserID(userID bson.ObjectId) ([]Interval, error) {
 	var intervals []Interval
 	err := dao.getDBCollection().Find(bson.M{"userid": userID}).All(&intervals)
 	return intervals, err
+}
+
+func (dao *IntervalDao) IsUserWorking(userID bson.ObjectId) (bool, error) {
+	query := bson.M{"userid": userID, "stop": bson.M{"$exists": false}}
+	openIntervals, err := dao.getDBCollection().Find(query).Count()
+	working := openIntervals > 0
+	return working, err
+}
+
+func (dao *IntervalDao) Start(userID bson.ObjectId) error {
+	return dao.Save(NewIntervalWithStart(userID, time.Now()))
+}
+
+func (dao *IntervalDao) Stop(userID bson.ObjectId) error {
+	openIntervals, err := dao.FindOpenIntervals(userID)
+	if validationErr := checkStopErrors(openIntervals, err); validationErr != nil {
+		return validationErr
+	}
+	return dao.getDBCollection().UpdateId(openIntervals[0].ID, bson.M{"stop": time.Now()})
+}
+
+func checkStopErrors(openIntervals []Interval, err error) error {
+	if err != nil {
+		return err
+	}
+	if len(openIntervals) > 1 {
+		return errors.New("more than one open interval")
+	}
+	if len(openIntervals) == 0 {
+		return errors.New("user is not working")
+	}
+	return nil
+}
+
+func (dao *IntervalDao) FindOpenIntervals(userID bson.ObjectId) ([]Interval, error) {
+	var openIntervals []Interval
+	findQuery := bson.M{"userid": userID, "stop": bson.M{"$exists": false}}
+	err := dao.getDBCollection().Find(findQuery).All(&openIntervals)
+	return openIntervals, err
 }
 
 func (dao *IntervalDao) getDBConnection() *mgo.Database {

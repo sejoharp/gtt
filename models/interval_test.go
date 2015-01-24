@@ -29,15 +29,16 @@ var _ = Describe("IntervalDao", func() {
 
 	It("should save an interval.", func() {
 		userID := bson.NewObjectId()
-		now := time.Now()
+		start := time.Now()
+		stop := time.Now()
 
-		insertErr := dao.Save(NewIntervalWithStart(userID, now))
+		Expect(dao.Save(NewInterval(userID, start, stop))).To(Succeed())
 
-		Expect(insertErr).To(BeNil())
 		var interval Interval
 		findErr := collection.Find(bson.M{"userid": userID}).One(&interval)
 		Expect(findErr).To(BeNil())
-		Expect(interval.Start.Unix()).To(Equal(now.Unix()))
+		Expect(interval.Start.Unix()).To(Equal(start.Unix()))
+		Expect(interval.Stop.Unix()).To(Equal(stop.Unix()))
 		Expect(interval.UserID).To(Equal(userID))
 		Expect(interval.ID.Valid()).To(BeTrue())
 	})
@@ -63,18 +64,75 @@ var _ = Describe("IntervalDao", func() {
 		Expect(intervals).To(HaveLen(0))
 	})
 
-	PIt("should find a not working user.")
-	PIt("should find a working user.")
-	PIt("should return all intervals in a given range.")
-	PIt("should start a new interval.")
-	PIt("should stop the last open interval.")
-})
+	It("should find a not working user.", func() {
+		userID := bson.NewObjectId()
+		dao.Save(NewInterval(userID, time.Now(), time.Now()))
 
-var _ = Describe("Interval", func() {
-	It("should ensure a present userid", func() {
-		var id bson.ObjectId = "a"
-		Expect(id.Valid()).To(BeFalse())
+		working, err := dao.IsUserWorking(userID)
+
+		Expect(err).To(BeNil())
+		Expect(working).To(BeFalse())
 	})
 
-	PIt("should ensure a present start")
+	It("should find a working user.", func() {
+		userID := bson.NewObjectId()
+		dao.Save(NewIntervalWithStart(userID, time.Now()))
+
+		working, err := dao.IsUserWorking(userID)
+
+		Expect(err).To(BeNil())
+		Expect(working).To(BeTrue())
+	})
+
+	It("should start a new interval with current start time.", func() {
+		userID := bson.NewObjectId()
+
+		Expect(dao.Start(userID)).To(Succeed())
+
+		intervals, findErr := dao.FindByUserID(userID)
+		Expect(findErr).To(BeNil())
+		Expect(intervals[0].Stop).To(BeZero())
+		Expect(intervals[0].Start).NotTo(BeZero())
+	})
+
+	It("should return all open intervals", func() {
+		userID := bson.NewObjectId()
+		dao.Start(userID)
+		dao.Start(userID)
+		dao.Save(NewInterval(userID, time.Now(), time.Now()))
+
+		openIntervals, err := dao.FindOpenIntervals(userID)
+
+		Expect(err).To(BeNil())
+		Expect(openIntervals).To(HaveLen(2))
+		Expect(openIntervals[0].Stop).To(BeZero())
+		Expect(openIntervals[1].Stop).To(BeZero())
+	})
+
+	It("should return an error when stop does not find an open interval.", func() {
+		userID := bson.NewObjectId()
+
+		err := dao.Stop(userID)
+
+		Expect(err.Error()).To(Equal("user is not working"))
+	})
+
+	It("should return an error when stop finds more than one open interval.", func() {
+		userID := bson.NewObjectId()
+		dao.Start(userID)
+		dao.Start(userID)
+
+		err := dao.Stop(userID)
+
+		Expect(err.Error()).To(Equal("more than one open interval"))
+	})
+
+	It("should stop the last open interval.", func() {
+		userID := bson.NewObjectId()
+		dao.Start(userID)
+
+		Expect(dao.Stop(userID)).To(Succeed())
+	})
+
+	PIt("should return all intervals in a given range.")
 })
