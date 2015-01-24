@@ -129,7 +129,7 @@ var _ = Describe("IntervalDao", func() {
 
 	It("should stop open interval.", func() {
 		userID := bson.NewObjectId()
-		dao.Start(userID)
+		Expect(dao.Start(userID)).To(Succeed())
 
 		Expect(dao.Stop(userID)).To(Succeed())
 	})
