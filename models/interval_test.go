@@ -1,11 +1,10 @@
-package models_test
+package models
 
 import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/zippelmann/gtt/models"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -132,7 +131,12 @@ var _ = Describe("IntervalDao", func() {
 		dao.Start(userID)
 
 		Expect(dao.Stop(userID)).To(Succeed())
+
+		intervals, err := dao.FindByUserID(userID)
+		Expect(err).To(BeNil())
+		Expect(intervals).To(HaveLen(1))
+		Expect(intervals[0].Stop).ToNot(BeZero())
 	})
 
-	PIt("should return all intervals in a given range.")
+	//	PIt("should return all intervals in a given range.")
 })
