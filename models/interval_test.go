@@ -109,6 +109,18 @@ var _ = Describe("IntervalDao", func() {
 		Expect(openIntervals[1].Stop).To(BeZero())
 	})
 
+	It("should return one open interval", func() {
+		userID := bson.NewObjectId()
+		dao.Start(userID)
+
+		openIntervals, err := dao.FindOpenIntervals(userID)
+
+		Expect(err).To(BeNil())
+		Expect(openIntervals).To(HaveLen(1))
+		Expect(openIntervals[0].Start).NotTo(BeZero())
+		Expect(openIntervals[0].Stop).To(BeZero())
+	})
+
 	It("should return an error when stop does not find an open interval.", func() {
 		userID := bson.NewObjectId()
 
@@ -127,14 +139,15 @@ var _ = Describe("IntervalDao", func() {
 		Expect(err.Error()).To(Equal("more than one open interval"))
 	})
 
-	FIt("should stop open interval.", func() {
+	It("should stop open interval.", func() {
 		userID := bson.NewObjectId()
 		dao.Start(userID)
 		var intervals []Interval
-		collection.Find(nil).All(&intervals)
+		open, _ := dao.FindOpenIntervals(userID)
 		fmt.Printf("\nuserid: %v", userID)
-		fmt.Printf("\nintervals before: %v\n", intervals)
+		fmt.Printf("\nintervals before: %v\n", open)
 
+		time.Sleep(3 * time.Second)
 		dao.Stop(userID)
 
 		collection.Find(nil).All(&intervals)
