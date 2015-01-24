@@ -132,9 +132,10 @@ var _ = Describe("IntervalDao", func() {
 		dao.Start(userID)
 		var intervals []Interval
 		collection.Find(nil).All(&intervals)
+		fmt.Printf("\nuserid: %v", userID)
 		fmt.Printf("\nintervals before: %v\n", intervals)
 
-		Expect(dao.Stop(userID)).To(Succeed())
+		dao.Stop(userID)
 
 		collection.Find(nil).All(&intervals)
 		fmt.Printf("intervals after:  %v", intervals)
