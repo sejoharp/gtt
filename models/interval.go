@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	"errors"
@@ -70,10 +69,9 @@ func (dao *IntervalDao) Stop(userID bson.ObjectId) error {
 	if validationErr := checkStopErrors(openIntervals, err); validationErr != nil {
 		return validationErr
 	}
-	openIntervals[0].Stop = time.Now()
-	changeInfo, upsertErr := dao.getDBCollection().UpsertId(openIntervals[0].ID, openIntervals[0])
-	fmt.Printf("\nchangeInfo: %v", changeInfo)
-	return upsertErr
+	query := bson.M{"userid": userID, "stop": bson.M{"$exists": false}}
+	change := bson.M{"$set": bson.M{"stop": time.Now()}}
+	return dao.getDBCollection().Update(query, change)
 }
 
 func checkStopErrors(openIntervals []Interval, err error) error {
