@@ -142,6 +142,7 @@ var _ = Describe("IntervalDao", func() {
 	It("should stop open interval.", func() {
 		userID := bson.NewObjectId()
 		dao.Start(userID)
+		dao.Start(bson.NewObjectId())
 
 		var intervals []Interval
 		collection.Find(nil).All(&intervals)
