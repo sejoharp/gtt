@@ -142,16 +142,15 @@ var _ = Describe("IntervalDao", func() {
 	It("should stop open interval.", func() {
 		userID := bson.NewObjectId()
 		dao.Start(userID)
-		var intervals []Interval
-		open, _ := dao.FindOpenIntervals(userID)
-		fmt.Printf("\nuserid: %v", userID)
-		fmt.Printf("\nintervals before: %v\n", open)
 
-		time.Sleep(3 * time.Second)
+		var intervals []Interval
+		collection.Find(nil).All(&intervals)
+		fmt.Printf("\nintervals before: %v", intervals)
+
 		dao.Stop(userID)
 
 		collection.Find(nil).All(&intervals)
-		fmt.Printf("intervals after:  %v", intervals)
+		fmt.Printf("\nintervals after:  %v", intervals)
 
 		intervals, err := dao.FindByUserID(userID)
 		Expect(err).To(BeNil())
