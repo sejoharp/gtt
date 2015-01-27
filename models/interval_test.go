@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -142,16 +141,8 @@ var _ = Describe("IntervalDao", func() {
 	It("should stop open interval.", func() {
 		userID := bson.NewObjectId()
 		dao.Start(userID)
-		dao.Start(bson.NewObjectId())
 
-		var intervals []Interval
-		collection.Find(nil).All(&intervals)
-		fmt.Printf("\nintervals before: %v", intervals)
-
-		dao.Stop(userID)
-
-		collection.Find(nil).All(&intervals)
-		fmt.Printf("\nintervals after:  %v", intervals)
+		Expect(dao.Stop(userID)).To(Succeed())
 
 		intervals, err := dao.FindByUserID(userID)
 		Expect(err).To(BeNil())
@@ -159,5 +150,5 @@ var _ = Describe("IntervalDao", func() {
 		Expect(intervals[0].Stop).ToNot(BeZero())
 	})
 
-	//	PIt("should return all intervals in a given range.")
+	PIt("should return all intervals in a given range.")
 })
