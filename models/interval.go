@@ -69,9 +69,8 @@ func (dao *IntervalDao) Stop(userID bson.ObjectId) error {
 	if validationErr := checkStopErrors(openIntervals, err); validationErr != nil {
 		return validationErr
 	}
-	//	query := bson.M{"userid": userID, "stop": bson.M{"$exists": false}}
 	change := bson.M{"$set": bson.M{"stop": time.Now()}}
-	return dao.getDBCollection().Update(bson.M{"_id": openIntervals[0].ID}, change)
+	return dao.getDBCollection().UpdateId(openIntervals[0].ID, change)
 }
 
 func checkStopErrors(openIntervals []Interval, err error) error {
