@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -13,21 +14,21 @@ var _ = Describe("IntervalDao", func() {
 	var (
 		collection *mgo.Collection
 		dao        *IntervalDao
+		userID     bson.ObjectId
 	)
 
 	BeforeEach(func() {
 		session, err := createSession()
 		Expect(err).To(BeNil(), "All tests need a connection to a mongodb.")
-
 		collection = getCollection(session, "timetracker", "intervals")
-
 		cleanCollection(collection)
 
 		dao = NewIntervalDao(session, "timetracker")
+
+		userID = bson.NewObjectId()
 	})
 
 	It("should save an interval.", func() {
-		userID := bson.NewObjectId()
 		start := time.Now()
 		stop := time.Now()
 
@@ -43,7 +44,6 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should find all by userID.", func() {
-		userID := bson.NewObjectId()
 		dao.Save(NewIntervalWithStart(userID, time.Now()))
 		dao.Save(NewIntervalWithStart(userID, time.Now()))
 		dao.Save(NewIntervalWithStart(bson.NewObjectId(), time.Now()))
@@ -64,7 +64,6 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should find a not working user.", func() {
-		userID := bson.NewObjectId()
 		dao.Save(NewInterval(userID, time.Now(), time.Now()))
 
 		working, err := dao.IsUserWorking(userID)
@@ -74,7 +73,6 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should find a working user.", func() {
-		userID := bson.NewObjectId()
 		dao.Save(NewIntervalWithStart(userID, time.Now()))
 
 		working, err := dao.IsUserWorking(userID)
@@ -84,8 +82,6 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should start a new interval with current start time.", func() {
-		userID := bson.NewObjectId()
-
 		Expect(dao.Start(userID)).To(Succeed())
 
 		intervals, findErr := dao.FindByUserID(userID)
@@ -95,7 +91,6 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should return all open intervals", func() {
-		userID := bson.NewObjectId()
 		dao.Start(userID)
 		dao.Start(userID)
 		dao.Save(NewInterval(userID, time.Now(), time.Now()))
@@ -109,7 +104,6 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should return one open interval", func() {
-		userID := bson.NewObjectId()
 		dao.Start(userID)
 
 		openIntervals, err := dao.FindOpenIntervals(userID)
@@ -121,15 +115,12 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should return an error when stop does not find an open interval.", func() {
-		userID := bson.NewObjectId()
-
 		err := dao.Stop(userID)
 
 		Expect(err.Error()).To(Equal("user is not working"))
 	})
 
 	It("should return an error when stop finds more than one open interval.", func() {
-		userID := bson.NewObjectId()
 		dao.Start(userID)
 		dao.Start(userID)
 
@@ -139,7 +130,6 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should stop open interval.", func() {
-		userID := bson.NewObjectId()
 		dao.Start(userID)
 
 		Expect(dao.Stop(userID)).To(Succeed())
@@ -150,5 +140,54 @@ var _ = Describe("IntervalDao", func() {
 		Expect(intervals[0].Stop).ToNot(BeZero())
 	})
 
-	PIt("should return all intervals in a given range.")
+	It("should return all intervals, where start is in a given range.", func() {
+		interval := NewInterval(userID, createDate("2014-12-10 07:00"), createDate("2014-12-10 15:00"))
+		dao.Save(NewInterval(userID, createDate("2014-12-11 08:00"), createDate("2014-12-11 16:00")))
+		dao.Save(interval)
+		dao.Save(NewInterval(userID, createDate("2014-12-09 09:00"), createDate("2014-12-09 19:00")))
+
+		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
+
+		Expect(err).To(Succeed())
+		Expect(intervalsInRange).To(HaveLen(1))
+		checkIntervalEquality(intervalsInRange[0], interval)
+	})
+
+	It("should return an empty array when there are no intervals in range.", func() {
+		dao.Save(NewInterval(userID, createDate("2014-12-09 08:00"), createDate("2014-12-09 23:59")))
+		dao.Save(NewInterval(userID, createDate("2014-12-11 00:00"), createDate("2014-12-11 16:00")))
+
+		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
+
+		Expect(err).To(Succeed())
+		Expect(intervalsInRange).To(HaveLen(0))
+	})
+	It("should return all intervals, where start is near the limits in a given range.", func() {
+		interval1 := NewInterval(userID, time.Date(2014, 12, 9, 23, 59, 59, 999, time.UTC), createDate("2014-12-10 07:00"))
+		interval2 := NewInterval(userID, time.Date(2014, 12, 10, 0, 0, 0, 0, time.UTC), createDate("2014-12-10 07:00"))
+		interval3 := NewInterval(userID, time.Date(2014, 12, 10, 23, 59, 59, 999, time.UTC), createDate("2014-12-11 07:00"))
+		interval4 := NewInterval(userID, time.Date(2014, 12, 11, 0, 0, 0, 0, time.UTC), createDate("2014-12-10 07:00"))
+		Expect(collection.Insert(interval1, interval2, interval3, interval4)).To(Succeed())
+
+		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
+
+		Expect(err).To(Succeed())
+		Expect(intervalsInRange).To(HaveLen(2))
+		checkIntervalEquality(intervalsInRange[0], interval2)
+		checkIntervalEquality(intervalsInRange[1], interval3)
+	})
 })
+
+func createDate(date string) time.Time {
+	time, err := time.Parse("2006-01-02 15:04", date)
+	if err != nil {
+		panic(fmt.Sprintf("date parsing failed|date: %s", date))
+	}
+	return time
+}
+
+func checkIntervalEquality(interval1, interval2 Interval) {
+	Expect(interval1.UserID).To(Equal(interval2.UserID))
+	Expect(interval1.Start.Unix()).To(Equal(interval2.Start.Unix()))
+	Expect(interval1.Stop.Unix()).To(Equal(interval2.Stop.Unix()))
+}

@@ -64,6 +64,7 @@ func (dao *IntervalDao) Start(userID bson.ObjectId) error {
 	return dao.Save(NewIntervalWithStart(userID, time.Now()))
 }
 
+// Stop sets stop to current time, if the user is working. Returns an error when the user is not working or has more than one interval without a stop time or find returns an error.
 func (dao *IntervalDao) Stop(userID bson.ObjectId) error {
 	openIntervals, err := dao.FindOpenIntervals(userID)
 	if validationErr := checkStopErrors(openIntervals, err); validationErr != nil {
@@ -86,11 +87,20 @@ func checkStopErrors(openIntervals []Interval, err error) error {
 	return nil
 }
 
+// FindOpenIntervals returns all intervals where stop is not set/zero value
 func (dao *IntervalDao) FindOpenIntervals(userID bson.ObjectId) ([]Interval, error) {
 	var openIntervals []Interval
-	findQuery := bson.M{"userid": userID, "stop": bson.M{"$exists": false}}
-	err := dao.getDBCollection().Find(findQuery).All(&openIntervals)
+	query := bson.M{"userid": userID, "stop": bson.M{"$exists": false}}
+	err := dao.getDBCollection().Find(query).All(&openIntervals)
 	return openIntervals, err
+}
+
+// FindInRange returns all intervals where start is greater than or equals begin and less than end
+func (dao *IntervalDao) FindInRange(userID bson.ObjectId, begin time.Time, end time.Time) ([]Interval, error) {
+	var intervals []Interval
+	query := bson.M{"userid": userID, "start": bson.M{"$gte": begin, "$lt": end}}
+	err := dao.getDBCollection().Find(query).All(&intervals)
+	return intervals, err
 }
 
 func (dao *IntervalDao) getDBConnection() *mgo.Database {
