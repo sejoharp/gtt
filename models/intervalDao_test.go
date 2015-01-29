@@ -162,6 +162,7 @@ var _ = Describe("IntervalDao", func() {
 		Expect(err).To(Succeed())
 		Expect(intervalsInRange).To(HaveLen(0))
 	})
+
 	It("should return all intervals, where start is near the limits in a given range.", func() {
 		interval1 := NewInterval(userID, time.Date(2014, 12, 9, 23, 59, 59, 999, time.UTC), createDate("2014-12-10 07:00"))
 		interval2 := NewInterval(userID, time.Date(2014, 12, 10, 0, 0, 0, 0, time.UTC), createDate("2014-12-10 07:00"))
