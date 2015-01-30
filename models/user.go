@@ -8,22 +8,23 @@ import (
 
 type User struct {
 	ID       bson.ObjectId `bson:"_id,omitempty"`
+	Name     string
 	Worktime time.Duration
 	Overtime time.Duration
 }
 
-func NewMinimalUser(worktime time.Duration) User {
-	return User{Worktime: worktime, Overtime: 0}
+func NewMinimalUser(name string, worktime time.Duration) User {
+	return User{Name: name, Worktime: worktime, Overtime: 0}
 }
 
-func NewPersistedMinimalUser(id bson.ObjectId, worktime time.Duration) User {
-	return User{ID: id, Worktime: worktime, Overtime: 0}
+func NewPersistedMinimalUser(id bson.ObjectId, name string, worktime time.Duration) User {
+	return User{ID: id, Name: name, Worktime: worktime, Overtime: 0}
 }
 
-func NewUser(worktime time.Duration, ovetime time.Duration) User {
-	return User{Worktime: worktime, Overtime: ovetime}
+func NewUser(name string, worktime time.Duration, ovetime time.Duration) User {
+	return User{Name: name, Worktime: worktime, Overtime: ovetime}
 }
 
-func NewPersistedUser(id bson.ObjectId, worktime time.Duration, ovetime time.Duration) User {
-	return User{ID: id, Worktime: worktime, Overtime: ovetime}
+func NewPersistedUser(id bson.ObjectId, name string, worktime time.Duration, ovetime time.Duration) User {
+	return User{ID: id, Name: name, Worktime: worktime, Overtime: ovetime}
 }
