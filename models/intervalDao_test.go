@@ -29,18 +29,24 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should save an interval.", func() {
-		start := time.Now()
-		stop := time.Now()
+		expectedInterval := NewInterval(userID, time.Now(), time.Now())
 
-		Expect(dao.Save(NewInterval(userID, start, stop))).To(Succeed())
+		Expect(dao.Save(expectedInterval)).To(Succeed())
 
 		var interval Interval
 		findErr := collection.Find(bson.M{"userid": userID}).One(&interval)
 		Expect(findErr).To(BeNil())
-		Expect(interval.Start.Unix()).To(Equal(start.Unix()))
-		Expect(interval.Stop.Unix()).To(Equal(stop.Unix()))
-		Expect(interval.UserID).To(Equal(userID))
+		Expect(interval.EqualsWithOutID(expectedInterval)).To(BeTrue())
 		Expect(interval.ID.Valid()).To(BeTrue())
+	})
+	It("should save a complete interval.", func() {
+		expectedInterval := NewPersistedInterval(bson.NewObjectId(), userID, time.Now(), time.Now())
+
+		Expect(dao.Save(expectedInterval)).To(Succeed())
+
+		var interval Interval
+		Expect(collection.Find(bson.M{"userid": userID}).One(&interval)).To(Succeed())
+		Expect(interval).To(Equal(expectedInterval))
 	})
 
 	It("should find all by userID.", func() {
@@ -150,7 +156,7 @@ var _ = Describe("IntervalDao", func() {
 
 		Expect(err).To(Succeed())
 		Expect(intervalsInRange).To(HaveLen(1))
-		checkIntervalEquality(intervalsInRange[0], interval)
+		Expect(intervalsInRange[0].EqualsWithOutID(interval)).To(BeTrue())
 	})
 
 	It("should return an empty array when there are no intervals in range.", func() {
@@ -160,27 +166,27 @@ var _ = Describe("IntervalDao", func() {
 		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
 
 		Expect(err).To(Succeed())
-		Expect(intervalsInRange).To(HaveLen(0))
+		Expect(intervalsInRange).To(BeEmpty())
 	})
 
 	It("should return all intervals, where start is near the limits in a given range.", func() {
-		interval1 := NewInterval(userID, time.Date(2014, 12, 9, 23, 59, 59, 999, time.UTC), createDate("2014-12-10 07:00"))
-		interval2 := NewInterval(userID, time.Date(2014, 12, 10, 0, 0, 0, 0, time.UTC), createDate("2014-12-10 07:00"))
-		interval3 := NewInterval(userID, time.Date(2014, 12, 10, 23, 59, 59, 999, time.UTC), createDate("2014-12-11 07:00"))
-		interval4 := NewInterval(userID, time.Date(2014, 12, 11, 0, 0, 0, 0, time.UTC), createDate("2014-12-10 07:00"))
+		interval1 := NewInterval(userID, time.Date(2014, 12, 9, 23, 59, 59, 999, time.Local), createDate("2014-12-10 07:00"))
+		interval2 := NewInterval(userID, time.Date(2014, 12, 10, 0, 0, 0, 0, time.Local), createDate("2014-12-10 07:00"))
+		interval3 := NewInterval(userID, time.Date(2014, 12, 10, 23, 59, 59, 999, time.Local), createDate("2014-12-11 07:00"))
+		interval4 := NewInterval(userID, time.Date(2014, 12, 11, 0, 0, 0, 0, time.Local), createDate("2014-12-10 07:00"))
 		Expect(collection.Insert(interval1, interval2, interval3, interval4)).To(Succeed())
 
 		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
 
 		Expect(err).To(Succeed())
 		Expect(intervalsInRange).To(HaveLen(2))
-		checkIntervalEquality(intervalsInRange[0], interval2)
-		checkIntervalEquality(intervalsInRange[1], interval3)
+		Expect(intervalsInRange[0].EqualsWithOutID(interval2)).To(BeTrue())
+		Expect(intervalsInRange[1].EqualsWithOutID(interval3)).To(BeTrue())
 	})
 })
 
 func createDate(date string) time.Time {
-	time, err := time.Parse("2006-01-02 15:04", date)
+	time, err := time.ParseInLocation("2006-01-02 15:04", date, time.Local)
 	if err != nil {
 		panic(fmt.Sprintf("date parsing failed|date: %s", date))
 	}
@@ -188,6 +194,13 @@ func createDate(date string) time.Time {
 }
 
 func checkIntervalEquality(interval1, interval2 Interval) {
+	Expect(interval1.UserID).To(Equal(interval2.UserID))
+	Expect(interval1.Start).To(Equal(interval2.Start))
+	Expect(interval1.Stop).To(Equal(interval2.Stop))
+}
+
+func checkPersistedIntervalEquality(interval1, interval2 Interval) {
+	Expect(interval1.ID).To(Equal(interval2.ID))
 	Expect(interval1.UserID).To(Equal(interval2.UserID))
 	Expect(interval1.Start.Unix()).To(Equal(interval2.Start.Unix()))
 	Expect(interval1.Stop.Unix()).To(Equal(interval2.Stop.Unix()))
