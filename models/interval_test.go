@@ -21,6 +21,7 @@ var _ = Describe("Interval", func() {
 	interval2 := NewPersistedInterval(id, userID, time2, time2)
 	interval3 := NewInterval(userID, time2, time2)
 	interval4 := NewIntervalWithStart(userID, time2)
+	interval5 := NewInterval(bson.NewObjectId(), time2, time2)
 
 	It("should detect equal intervals", func() {
 		Expect(interval1).To(Equal(interval1))
@@ -28,6 +29,10 @@ var _ = Describe("Interval", func() {
 
 	It("should detect different intervals", func() {
 		Expect(interval1).NotTo(Equal(interval2))
+	})
+
+	It("should detect different userIDs", func() {
+		Expect(interval3.EqualsWithoutID(interval5)).To(BeFalse())
 	})
 
 	It("should ignore different nanoseconds", func() {

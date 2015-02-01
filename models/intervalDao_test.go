@@ -36,7 +36,7 @@ var _ = Describe("IntervalDao", func() {
 		var interval Interval
 		findErr := collection.Find(bson.M{"userid": userID}).One(&interval)
 		Expect(findErr).To(BeNil())
-		Expect(interval.EqualsWithOutID(expectedInterval)).To(BeTrue())
+		Expect(interval.EqualsWithoutID(expectedInterval)).To(BeTrue())
 		Expect(interval.ID.Valid()).To(BeTrue())
 	})
 	It("should save a complete interval.", func() {
@@ -156,7 +156,7 @@ var _ = Describe("IntervalDao", func() {
 
 		Expect(err).To(BeNil())
 		Expect(intervalsInRange).To(HaveLen(1))
-		Expect(intervalsInRange[0].EqualsWithOutID(interval)).To(BeTrue())
+		Expect(intervalsInRange[0].EqualsWithoutID(interval)).To(BeTrue())
 	})
 
 	It("should return an empty array when there are no intervals in range.", func() {
@@ -180,8 +180,8 @@ var _ = Describe("IntervalDao", func() {
 
 		Expect(err).To(BeNil())
 		Expect(intervalsInRange).To(HaveLen(2))
-		Expect(intervalsInRange[0].EqualsWithOutID(interval2)).To(BeTrue())
-		Expect(intervalsInRange[1].EqualsWithOutID(interval3)).To(BeTrue())
+		Expect(intervalsInRange[0].EqualsWithoutID(interval2)).To(BeTrue())
+		Expect(intervalsInRange[1].EqualsWithoutID(interval3)).To(BeTrue())
 	})
 })
 

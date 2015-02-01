@@ -35,7 +35,7 @@ func cleanNanoSeconds(date time.Time) time.Time {
 		date.Hour(), date.Minute(), date.Second(), 0, date.Location())
 }
 
-func (interval Interval) EqualsWithOutID(that Interval) bool {
+func (interval Interval) EqualsWithoutID(that Interval) bool {
 	if interval.UserID == that.UserID && interval.Start == that.Start && interval.Stop == that.Stop {
 		return true
 	}
