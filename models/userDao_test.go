@@ -33,7 +33,7 @@ var _ = Describe("UserDao", func() {
 		overtime, _ = time.ParseDuration("1h")
 	})
 
-	PIt("should save a user.", func() {
+	It("should save a user.", func() {
 		user := NewPersistedUser(id, name, worktime, overtime)
 
 		err := dao.Save(user)
