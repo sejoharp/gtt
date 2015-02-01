@@ -41,8 +41,8 @@ var _ = Describe("UserDao", func() {
 		Expect(err).To(Succeed())
 		var persistedUser User
 		findErr := collection.FindId(id).One(&persistedUser)
-		Expect(findErr).To(Succeed())
-		checkPersistedUserEquality(user, persistedUser)
+		Expect(findErr).To(BeNil())
+		Expect(persistedUser).To(Equal(user))
 	})
 
 	PIt("should find a user by id.")
@@ -50,16 +50,3 @@ var _ = Describe("UserDao", func() {
 	PIt("should return the password hash of a user.")
 	PIt("should save a password hash of a user.")
 })
-
-func checkUserEquality(user1, user2 User) {
-	Expect(user1.Name).To(Equal(user2.Name))
-	Expect(user1.Overtime).To(Equal(user2.Overtime))
-	Expect(user1.Worktime).To(Equal(user2.Worktime))
-}
-
-func checkPersistedUserEquality(user1, user2 User) {
-	Expect(user1.ID).To(Equal(user2.ID))
-	Expect(user1.Name).To(Equal(user2.Name))
-	Expect(user1.Overtime).To(Equal(user2.Overtime))
-	Expect(user1.Worktime).To(Equal(user2.Worktime))
-}

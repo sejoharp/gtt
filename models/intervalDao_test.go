@@ -66,7 +66,7 @@ var _ = Describe("IntervalDao", func() {
 		intervals, err := dao.FindByUserID(bson.NewObjectId())
 
 		Expect(err).To(BeNil())
-		Expect(intervals).To(HaveLen(0))
+		Expect(intervals).To(BeEmpty())
 	})
 
 	It("should find a not working user.", func() {
@@ -154,7 +154,7 @@ var _ = Describe("IntervalDao", func() {
 
 		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
 
-		Expect(err).To(Succeed())
+		Expect(err).To(BeNil())
 		Expect(intervalsInRange).To(HaveLen(1))
 		Expect(intervalsInRange[0].EqualsWithOutID(interval)).To(BeTrue())
 	})
@@ -165,7 +165,7 @@ var _ = Describe("IntervalDao", func() {
 
 		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
 
-		Expect(err).To(Succeed())
+		Expect(err).To(BeNil())
 		Expect(intervalsInRange).To(BeEmpty())
 	})
 
@@ -178,7 +178,7 @@ var _ = Describe("IntervalDao", func() {
 
 		intervalsInRange, err := dao.FindInRange(userID, createDate("2014-12-10 00:00"), createDate("2014-12-11 00:00"))
 
-		Expect(err).To(Succeed())
+		Expect(err).To(BeNil())
 		Expect(intervalsInRange).To(HaveLen(2))
 		Expect(intervalsInRange[0].EqualsWithOutID(interval2)).To(BeTrue())
 		Expect(intervalsInRange[1].EqualsWithOutID(interval3)).To(BeTrue())
@@ -191,17 +191,4 @@ func createDate(date string) time.Time {
 		panic(fmt.Sprintf("date parsing failed|date: %s", date))
 	}
 	return time
-}
-
-func checkIntervalEquality(interval1, interval2 Interval) {
-	Expect(interval1.UserID).To(Equal(interval2.UserID))
-	Expect(interval1.Start).To(Equal(interval2.Start))
-	Expect(interval1.Stop).To(Equal(interval2.Stop))
-}
-
-func checkPersistedIntervalEquality(interval1, interval2 Interval) {
-	Expect(interval1.ID).To(Equal(interval2.ID))
-	Expect(interval1.UserID).To(Equal(interval2.UserID))
-	Expect(interval1.Start.Unix()).To(Equal(interval2.Start.Unix()))
-	Expect(interval1.Stop.Unix()).To(Equal(interval2.Stop.Unix()))
 }
