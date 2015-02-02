@@ -13,10 +13,10 @@ var _ = Describe("UserDao", func() {
 	var (
 		collection *mgo.Collection
 		dao        *UserDao
-		id bson.ObjectId
-		name string
-		worktime time.Duration
-		overtime time.Duration
+		id         bson.ObjectId
+		name       string
+		worktime   time.Duration
+		overtime   time.Duration
 	)
 
 	BeforeEach(func() {

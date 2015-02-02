@@ -14,7 +14,7 @@ var _ = Describe("IntervalDao", func() {
 	var (
 		collection *mgo.Collection
 		dao        *IntervalDao
-		userID bson.ObjectId
+		userID     bson.ObjectId
 	)
 
 	BeforeEach(func() {
