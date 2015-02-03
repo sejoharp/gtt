@@ -10,11 +10,11 @@ install:
   - go get github.com/mattn/goveralls
 
 script:
-  - $HOME/gopath/bin/ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --compilers=2 -cover
+  - $GOPATH/bin/ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --compilers=2 -cover
 
 after_success:
-  - $HOME/gopath/bin/gover
-  - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
+  - $GOPATH/bin/gover
+  - $GOPATH/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
 
 services:
   - mongodb
