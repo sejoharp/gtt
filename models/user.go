@@ -29,4 +29,9 @@ func NewPersistedUser(id bson.ObjectId, name string, worktime time.Duration, ove
 	return User{ID: id, Name: name, Worktime: worktime, Overtime: ovetime}
 }
 
-//TODO: Add equals method without ID and test it like the interval one
+func (user User) EqualsWithoutID(that User) bool {
+	if user.Name == that.Name && user.Overtime == that.Overtime && user.Worktime == that.Worktime {
+		return true
+	}
+	return false
+}
