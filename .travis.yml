@@ -2,9 +2,6 @@ language: go
 go:
   - 1.4
 
-env:
-  - PATH=$HOME/gopath/bin:$PATH
-
 install:
   - go get -v -t ./...
   - go get github.com/axw/gocov/gocov
@@ -13,11 +10,11 @@ install:
   - go get github.com/mattn/goveralls
 
 script:
-  - ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --compilers=2 -cover
+  - $HOME/gopath/bin/ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --compilers=2 -cover
 
 after_success:
-  - gover
-  - goveralls -coverprofile=gover.coverprofile -service=travis-ci
+  - $HOME/gopath/bin/gover
+  - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci
 
 services:
   - mongodb
