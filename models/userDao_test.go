@@ -17,6 +17,7 @@ var _ = Describe("UserDao", func() {
 		name       string
 		worktime   time.Duration
 		overtime   time.Duration
+		user       User
 	)
 
 	BeforeEach(func() {
@@ -25,17 +26,16 @@ var _ = Describe("UserDao", func() {
 		collection = getCollection(session, "timetracker", "users")
 		cleanCollection(collection)
 
-		dao = NewUserDao(session, "timetracker")
+		dao = NewUserDao(session, collection.Database.Name)
 
 		id = bson.NewObjectId()
 		name = "myuser"
 		worktime, _ = time.ParseDuration("7h45m")
 		overtime, _ = time.ParseDuration("1h")
+		user = NewPersistedUser(id, name, worktime, overtime)
 	})
 
 	It("should save a user.", func() {
-		user := NewPersistedUser(id, name, worktime, overtime)
-
 		err := dao.Save(user)
 
 		Expect(err).To(Succeed())

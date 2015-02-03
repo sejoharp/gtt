@@ -31,8 +31,7 @@ func NewPersistedIntervalWithStart(id bson.ObjectId, userID bson.ObjectId, start
 }
 
 func cleanNanoSeconds(date time.Time) time.Time {
-	return time.Date(date.Year(), date.Month(), date.Day(),
-		date.Hour(), date.Minute(), date.Second(), 0, date.Location())
+	return time.Date(date.Year(), date.Month(), date.Day(), date.Hour(), date.Minute(), date.Second(), 0, date.Location())
 }
 
 func (interval Interval) EqualsWithoutID(that Interval) bool {

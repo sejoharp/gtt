@@ -23,7 +23,7 @@ var _ = Describe("IntervalDao", func() {
 		collection = getCollection(session, "timetracker", "intervals")
 		cleanCollection(collection)
 
-		dao = NewIntervalDao(session, "timetracker")
+		dao = NewIntervalDao(session, collection.Database.Name)
 
 		userID = bson.NewObjectId()
 	})
