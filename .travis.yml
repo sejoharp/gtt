@@ -2,15 +2,15 @@ language: go
 go:
   - 1.4
 
+env:
+  - PATH=$HOME/gopath/bin:$PATH
+
 install:
   - go get -v -t ./...
   - go get github.com/axw/gocov/gocov
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/modocache/gover
   - go get github.com/mattn/goveralls
-
-before_script:
-  - export PATH=$HOME/gopath/bin:$PATH
 
 script:
   - ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --compilers=2 -cover
