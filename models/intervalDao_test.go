@@ -42,6 +42,7 @@ var _ = Describe("IntervalDao", func() {
 		Expect(interval.EqualsWithoutID(expectedInterval)).To(BeTrue())
 		Expect(interval.ID.Valid()).To(BeTrue())
 	})
+
 	It("should save a complete interval.", func() {
 		expectedInterval := NewPersistedInterval(bson.NewObjectId(), userID, time.Now(), time.Now())
 

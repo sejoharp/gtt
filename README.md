@@ -25,6 +25,9 @@ timetracker with golang
 * gomega
 * goji
 * mgo
+* gocov
+* gover
+* gcoveralls
 
 # license
 ISC license
