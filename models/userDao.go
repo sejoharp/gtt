@@ -1,6 +1,7 @@
 package models
 
 import "gopkg.in/mgo.v2"
+import "gopkg.in/mgo.v2/bson"
 
 type UserDao struct {
 	dbName         string
@@ -24,4 +25,16 @@ func (dao *UserDao) getDBConnection() *mgo.Database {
 
 func (dao *UserDao) getDBCollection() *mgo.Collection {
 	return dao.getDBConnection().C(dao.collectionName)
+}
+
+func (dao *UserDao) FindByID(id bson.ObjectId) (User, error) {
+	var user User
+	err := dao.getDBCollection().FindId(id).One(&user)
+	return user, err
+}
+
+func (dao *UserDao) FindByName(name string) (User, error) {
+	var user User
+	err := dao.getDBCollection().Find(bson.M{"name": name}).One(&user)
+	return user, err
 }

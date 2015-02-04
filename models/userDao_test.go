@@ -14,14 +14,14 @@ var _ = Describe("UserDao", func() {
 	const collectionname = "users"
 
 	var (
-		collection    *mgo.Collection
-		dao           *UserDao
-		id            bson.ObjectId
-		name          string
-		worktime      time.Duration
-		overtime      time.Duration
-		userPersisted User
-		userMinimal   User
+		collection  *mgo.Collection
+		dao         *UserDao
+		id          bson.ObjectId
+		name        string
+		worktime    time.Duration
+		overtime    time.Duration
+		userWithID  User
+		userMinimal User
 	)
 
 	BeforeEach(func() {
@@ -36,17 +36,17 @@ var _ = Describe("UserDao", func() {
 		name = "myuser"
 		worktime, _ = time.ParseDuration("7h45m")
 		overtime, _ = time.ParseDuration("1h")
-		userPersisted = NewPersistedUser(id, name, worktime, overtime)
+		userWithID = NewPersistedUser(id, name, worktime, overtime)
 		userMinimal = NewMinimalUser(name, worktime)
 	})
 
 	It("should save a user.", func() {
-		Expect(dao.Save(userPersisted)).To(Succeed())
+		Expect(dao.Save(userWithID)).To(Succeed())
 
 		var persistedUser User
 		findErr := collection.FindId(id).One(&persistedUser)
 		Expect(findErr).To(BeNil())
-		Expect(persistedUser).To(Equal(userPersisted))
+		Expect(persistedUser).To(Equal(userWithID))
 	})
 
 	It("should save a user without overtime", func() {
@@ -58,8 +58,30 @@ var _ = Describe("UserDao", func() {
 		Expect(persistedUser.EqualsWithoutID(userMinimal)).To(BeTrue())
 	})
 
-	PIt("should find a user by id.")
-	PIt("should find a user by name.")
-	PIt("should return the password hash of a user.")
-	PIt("should save a password hash of a user.")
+	It("should find a user by id.", func() {
+		Expect(dao.Save(userWithID)).To(Succeed())
+
+		persistedUser, err := dao.FindByID(id)
+
+		Expect(err).To(BeNil())
+		Expect(persistedUser).To(Equal(userWithID))
+	})
+
+	It("should find a user by name.", func() {
+		Expect(dao.Save(userMinimal)).To(Succeed())
+
+		persistedUser, err := dao.FindByName(userMinimal.Name)
+		Expect(err).To(BeNil())
+		Expect(persistedUser.EqualsWithoutID(userMinimal)).To(BeTrue())
+	})
+
+	It("should return error when no user found by name.", func() {
+		Expect(dao.Save(userMinimal)).To(Succeed())
+
+		_, err := dao.FindByName("nobody")
+		Expect(err.Error()).To(Equal("not found"))
+	})
+
+	PIt("should return the password hash from a user.")
+	PIt("should save a password hash to a user.")
 })
