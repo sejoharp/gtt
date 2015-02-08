@@ -11,8 +11,8 @@ import (
 )
 
 var _ = Describe("IntervalDao", func() {
-	const dbname = "timetracker"
-	const collectionname = "intervals"
+	const dbName = "timetracker"
+	const collectionName = "intervals"
 
 	var (
 		collection *mgo.Collection
@@ -23,10 +23,10 @@ var _ = Describe("IntervalDao", func() {
 	BeforeEach(func() {
 		session, err := createSession()
 		Expect(err).To(BeNil(), "All tests need a connection to a mongodb.")
-		collection = getCollection(session, dbname, collectionname)
+		collection = getCollection(session, dbName, collectionName)
 		cleanCollection(collection)
 
-		dao = NewIntervalDao(session, dbname)
+		dao = NewIntervalDao(session, dbName)
 
 		userID = bson.NewObjectId()
 	})
