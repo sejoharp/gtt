@@ -38,3 +38,14 @@ func (dao *UserDao) FindByName(name string) (User, error) {
 	err := dao.getDBCollection().Find(bson.M{"name": name}).One(&user)
 	return user, err
 }
+
+func (dao *UserDao) AddPassword(id bson.ObjectId, password string) error {
+	change := bson.M{"$set": bson.M{"password": password}}
+	return dao.getDBCollection().UpdateId(id, change)
+}
+
+func (dao *UserDao) GetPassword(id bson.ObjectId) (string, error) {
+	var result bson.M
+	err := dao.getDBCollection().FindId(id).Select(bson.M{"password": 1}).One(&result)
+	return result["password"].(string), err
+}

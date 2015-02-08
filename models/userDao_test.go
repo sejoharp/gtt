@@ -12,6 +12,7 @@ import (
 var _ = Describe("UserDao", func() {
 	const dbname = "timetracker"
 	const collectionname = "users"
+	const passwordHash = "3!aYBlA994"
 
 	var (
 		collection  *mgo.Collection
@@ -82,6 +83,25 @@ var _ = Describe("UserDao", func() {
 		Expect(err.Error()).To(Equal("not found"))
 	})
 
-	PIt("should return the password hash from a user.")
-	PIt("should save a password hash to a user.")
+	It("should save a password hash to a user.", func() {
+		Expect(dao.Save(userWithID)).To(Succeed())
+
+		Expect(dao.AddPassword(userWithID.ID, passwordHash)).To(Succeed())
+
+		var result bson.M
+		err := collection.FindId(userWithID.ID).Select(bson.M{"password": 1}).One(&result)
+
+		Expect(err).To(BeNil())
+		Expect(result["password"]).To(Equal(passwordHash))
+	})
+
+	It("should return the password hash from a user.", func() {
+		Expect(dao.Save(userWithID)).To(Succeed())
+		Expect(dao.AddPassword(userWithID.ID, passwordHash)).To(Succeed())
+
+		hash, err := dao.GetPassword(userWithID.ID)
+
+		Expect(err).To(BeNil())
+		Expect(hash).To(Equal(passwordHash))
+	})
 })
