@@ -15,9 +15,14 @@ var _ = Describe("IntervalDao", func() {
 	const collectionName = "intervals"
 
 	var (
-		collection *mgo.Collection
-		dao        *IntervalDao
-		userID     bson.ObjectId
+		collection             *mgo.Collection
+		dao                    *IntervalDao
+		userID                 bson.ObjectId
+		userID2                bson.ObjectId
+		newInterval            Interval
+		newIntervalWithoutStop Interval
+		oldInterval            Interval
+		oldIntervalWithoutStop Interval
 	)
 
 	BeforeEach(func() {
@@ -29,34 +34,35 @@ var _ = Describe("IntervalDao", func() {
 		dao = NewIntervalDao(session, dbName)
 
 		userID = bson.NewObjectId()
+		userID2 = bson.NewObjectId()
+
+		newInterval = NewInterval(userID, time.Now(), time.Now())
+		newIntervalWithoutStop = NewIntervalWithStart(userID, time.Now())
+		oldInterval = NewPersistedInterval(bson.NewObjectId(), userID, time.Now(), time.Now())
+		oldIntervalWithoutStop = NewPersistedIntervalWithStart(bson.NewObjectId(), userID2, time.Now())
 	})
 
 	It("should save an interval.", func() {
-		expectedInterval := NewInterval(userID, time.Now(), time.Now())
-
-		Expect(dao.Save(expectedInterval)).To(Succeed())
+		Expect(dao.Save(newInterval)).To(Succeed())
 
 		var interval Interval
-		findErr := collection.Find(bson.M{"userid": userID}).One(&interval)
-		Expect(findErr).To(BeNil())
-		Expect(interval.EqualsWithoutID(expectedInterval)).To(BeTrue())
+		Expect(collection.Find(bson.M{"userid": userID}).One(&interval)).To(BeNil())
+		Expect(interval.EqualsWithoutID(newInterval)).To(BeTrue())
 		Expect(interval.ID.Valid()).To(BeTrue())
 	})
 
 	It("should save a complete interval.", func() {
-		expectedInterval := NewPersistedInterval(bson.NewObjectId(), userID, time.Now(), time.Now())
-
-		Expect(dao.Save(expectedInterval)).To(Succeed())
+		Expect(dao.Save(oldInterval)).To(Succeed())
 
 		var interval Interval
 		Expect(collection.Find(bson.M{"userid": userID}).One(&interval)).To(Succeed())
-		Expect(interval).To(Equal(expectedInterval))
+		Expect(interval).To(Equal(oldInterval))
 	})
 
 	It("should find all by userID.", func() {
-		dao.Save(NewIntervalWithStart(userID, time.Now()))
-		dao.Save(NewIntervalWithStart(userID, time.Now()))
-		dao.Save(NewIntervalWithStart(bson.NewObjectId(), time.Now()))
+		dao.Save(newIntervalWithoutStop)
+		dao.Save(newIntervalWithoutStop)
+		dao.Save(oldIntervalWithoutStop)
 
 		intervals, err := dao.FindByUserID(userID)
 
@@ -74,7 +80,7 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should find a not working user.", func() {
-		dao.Save(NewInterval(userID, time.Now(), time.Now()))
+		dao.Save(newInterval)
 
 		working, err := dao.IsUserWorking(userID)
 
@@ -83,7 +89,7 @@ var _ = Describe("IntervalDao", func() {
 	})
 
 	It("should find a working user.", func() {
-		dao.Save(NewIntervalWithStart(userID, time.Now()))
+		dao.Save(newIntervalWithoutStop)
 
 		working, err := dao.IsUserWorking(userID)
 
@@ -103,7 +109,7 @@ var _ = Describe("IntervalDao", func() {
 	It("should return all open intervals", func() {
 		dao.Start(userID)
 		dao.Start(userID)
-		dao.Save(NewInterval(userID, time.Now(), time.Now()))
+		dao.Save(oldInterval)
 
 		openIntervals, err := dao.FindOpenIntervals(userID)
 

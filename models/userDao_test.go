@@ -21,9 +21,9 @@ var _ = Describe("UserDao", func() {
 		name                   string
 		worktime               time.Duration
 		overtime               time.Duration
-		userPersistedWithID    User
-		userPersistedWithoutID User
-		userWithoutID          User
+		oldUser User
+		oldUserWithoutID User
+		newUserWithoutID User
 	)
 
 	BeforeEach(func() {
@@ -38,70 +38,70 @@ var _ = Describe("UserDao", func() {
 		name = "myuser"
 		worktime, _ = time.ParseDuration("7h45m")
 		overtime, _ = time.ParseDuration("1h")
-		userPersistedWithID = NewPersistedUser(id, name, worktime, overtime)
-		userPersistedWithoutID = NewPersistedMinimalUser(id, name, worktime)
-		userWithoutID = NewMinimalUser(name, worktime)
+		oldUser = NewPersistedUser(id, name, worktime, overtime)
+		oldUserWithoutID = NewPersistedMinimalUser(id, name, worktime)
+		newUserWithoutID = NewMinimalUser(name, worktime)
 	})
 
 	It("should save a user.", func() {
-		Expect(dao.Save(userPersistedWithID)).To(Succeed())
+		Expect(dao.Save(oldUser)).To(Succeed())
 
 		var persistedUser User
 		findErr := collection.FindId(id).One(&persistedUser)
 		Expect(findErr).To(BeNil())
-		Expect(persistedUser).To(Equal(userPersistedWithID))
+		Expect(persistedUser).To(Equal(oldUser))
 	})
 
 	It("should save a user without overtime", func() {
-		Expect(dao.Save(userWithoutID)).To(Succeed())
+		Expect(dao.Save(newUserWithoutID)).To(Succeed())
 
 		var persistedUser User
 		findErr := collection.Find(bson.M{}).One(&persistedUser)
 		Expect(findErr).To(BeNil())
-		Expect(persistedUser.EqualsWithoutID(userWithoutID)).To(BeTrue())
+		Expect(persistedUser.EqualsWithoutID(newUserWithoutID)).To(BeTrue())
 	})
 
 	It("should find a user by id.", func() {
-		Expect(dao.Save(userPersistedWithoutID)).To(Succeed())
+		Expect(dao.Save(oldUserWithoutID)).To(Succeed())
 
 		persistedUser, err := dao.FindByID(id)
 
 		Expect(err).To(BeNil())
-		Expect(persistedUser).To(Equal(userPersistedWithoutID))
+		Expect(persistedUser).To(Equal(oldUserWithoutID))
 	})
 
 	It("should find a user by name.", func() {
-		Expect(dao.Save(userWithoutID)).To(Succeed())
+		Expect(dao.Save(newUserWithoutID)).To(Succeed())
 
-		persistedUser, err := dao.FindByName(userWithoutID.Name)
+		persistedUser, err := dao.FindByName(newUserWithoutID.Name)
 		Expect(err).To(BeNil())
-		Expect(persistedUser.EqualsWithoutID(userWithoutID)).To(BeTrue())
+		Expect(persistedUser.EqualsWithoutID(newUserWithoutID)).To(BeTrue())
 	})
 
 	It("should return error when no user found by name.", func() {
-		Expect(dao.Save(userWithoutID)).To(Succeed())
+		Expect(dao.Save(newUserWithoutID)).To(Succeed())
 
 		_, err := dao.FindByName("nobody")
 		Expect(err.Error()).To(Equal("not found"))
 	})
 
 	It("should save a password hash to a user.", func() {
-		Expect(dao.Save(userPersistedWithID)).To(Succeed())
+		Expect(dao.Save(oldUser)).To(Succeed())
 
-		Expect(dao.AddPassword(userPersistedWithID.ID, passwordHash)).To(Succeed())
+		Expect(dao.AddPassword(oldUser.ID, passwordHash)).To(Succeed())
 
 		var result bson.M
-		err := collection.FindId(userPersistedWithID.ID).Select(bson.M{"password": 1}).One(&result)
+		err := collection.FindId(oldUser.ID).Select(bson.M{"password": 1}).One(&result)
 
 		Expect(err).To(BeNil())
 		Expect(result["password"]).To(Equal(passwordHash))
 	})
 
 	It("should return the password hash from a user.", func() {
-		Expect(dao.Save(userPersistedWithID)).To(Succeed())
-		Expect(dao.AddPassword(userPersistedWithID.ID, passwordHash)).To(Succeed())
+		Expect(dao.Save(oldUser)).To(Succeed())
+		Expect(dao.AddPassword(oldUser.ID, passwordHash)).To(Succeed())
 
-		hash, err := dao.GetPassword(userPersistedWithID.ID)
+		hash, err := dao.GetPassword(oldUser.ID)
 
 		Expect(err).To(BeNil())
 		Expect(hash).To(Equal(passwordHash))
