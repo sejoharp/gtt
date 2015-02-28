@@ -11,7 +11,7 @@ timetracker with golang
 * clone this repo
 * change to the repo
 * local build `go build`
-* installation to bin directory `go install`
+* optional: installation to bin directory `go install`
 
 # status
 [![Build Status](https://travis-ci.org/zippelmann/gtt.svg?branch=master)](https://travis-ci.org/zippelmann/gtt)
