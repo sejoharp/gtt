@@ -42,6 +42,12 @@ func (dao *UserDao) AddPassword(id bson.ObjectId, password string) error {
 	return dao.getDBCollection().UpdateId(id, change)
 }
 
+func (dao *UserDao) AddPasswordByUser(username string, password string) error {
+	change := bson.M{"$set": bson.M{"password": password}}
+	query := bson.M{"name": username}
+	return dao.getDBCollection().Update(query, change)
+}
+
 func (dao *UserDao) GetPassword(id bson.ObjectId) (string, error) {
 	var result bson.M
 	err := dao.getDBCollection().FindId(id).Select(bson.M{"password": 1}).One(&result)

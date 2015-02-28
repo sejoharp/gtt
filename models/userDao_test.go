@@ -15,13 +15,13 @@ var _ = Describe("UserDao", func() {
 	const passwordHash = "3!aYBlA994"
 
 	var (
-		collection             *mgo.Collection
-		dao                    *UserDao
-		id                     bson.ObjectId
-		name                   string
-		worktime               time.Duration
-		overtime               time.Duration
-		oldUser User
+		collection       *mgo.Collection
+		dao              *UserDao
+		id               bson.ObjectId
+		name             string
+		worktime         time.Duration
+		overtime         time.Duration
+		oldUser          User
 		oldUserWithoutID User
 		newUserWithoutID User
 	)
@@ -92,7 +92,17 @@ var _ = Describe("UserDao", func() {
 
 		var result bson.M
 		err := collection.FindId(oldUser.ID).Select(bson.M{"password": 1}).One(&result)
+		Expect(err).To(BeNil())
+		Expect(result["password"]).To(Equal(passwordHash))
+	})
 
+	It("should add a password hash to a user.", func() {
+		Expect(dao.Save(oldUser)).To(Succeed())
+
+		Expect(dao.AddPasswordByUser(oldUser.Name, passwordHash)).To(Succeed())
+
+		var result bson.M
+		err := collection.FindId(oldUser.ID).Select(bson.M{"password": 1}).One(&result)
 		Expect(err).To(BeNil())
 		Expect(result["password"]).To(Equal(passwordHash))
 	})
