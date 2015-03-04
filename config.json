@@ -1,7 +1,12 @@
 {
-  "host":"localhost",
-  "port":8888,
-  "database":"test",
-  "user": "user",
-  "password": "password"
+  "tokenKey": "foobarComplex",
+  "salt": "foobar",
+  "enableRegister": "false",
+  "mongodb": {
+    "host": "localhost",
+    "port": 8888,
+    "database": "test",
+    "user": "user",
+    "password": "password"
+  }
 }
