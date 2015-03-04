@@ -1,7 +1,7 @@
 {
   "tokenKey": "foobarComplex",
   "salt": "foobar",
-  "enableRegister": "false",
+  "enableRegister": false,
   "mongodb": {
     "host": "localhost",
     "port": 8888,

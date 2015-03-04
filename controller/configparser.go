@@ -8,7 +8,7 @@ import (
 type Config struct {
 	TokenKey       string
 	Salt           string
-	EnableRegister string
+	EnableRegister bool
 	MongoDb        struct {
 		Host     string
 		Port     int

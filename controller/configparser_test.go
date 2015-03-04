@@ -10,7 +10,7 @@ var _ = Describe("Configparser", func() {
 		configFile := []byte(`{
   			"tokenKey": "foobarComplex",
   			"salt": "foobar",
-			"enableRegister": "false",
+			"enableRegister": false,
   			"mongodb": {
     			"host": "localhost",
     			"port": 8888,
@@ -25,7 +25,7 @@ var _ = Describe("Configparser", func() {
 		Expect(err).To(Succeed())
 		Expect(config.TokenKey).To(Equal("foobarComplex"))
 		Expect(config.Salt).To(Equal("foobar"))
-		Expect(config.EnableRegister).To(Equal("false"))
+		Expect(config.EnableRegister).To(BeFalse())
 		Expect(config.MongoDb.Host).To(Equal("localhost"))
 		Expect(config.MongoDb.Port).To(Equal(8888))
 		Expect(config.MongoDb.Database).To(Equal("test"))
@@ -45,7 +45,7 @@ var _ = Describe("Configparser", func() {
 		Expect(err).To(Succeed())
 		Expect(config.TokenKey).To(Equal("foobarComplex"))
 		Expect(config.Salt).To(Equal("foobar"))
-		Expect(config.EnableRegister).To(Equal("false"))
+		Expect(config.EnableRegister).To(BeFalse())
 		Expect(config.MongoDb.Host).To(Equal("localhost"))
 		Expect(config.MongoDb.Port).To(Equal(8888))
 		Expect(config.MongoDb.Database).To(Equal("test"))
