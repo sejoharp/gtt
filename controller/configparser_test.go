@@ -39,6 +39,12 @@ var _ = Describe("Configparser", func() {
 		Expect(err).To(Succeed())
 	})
 
+	It("should return an error when file reading fails.", func() {
+		_, err := readFile("config.json")
+
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("should return parsed configfile.", func() {
 		config, err := ReadConfig("../config.json")
 
