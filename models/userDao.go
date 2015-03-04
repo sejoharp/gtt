@@ -17,6 +17,10 @@ func (dao *UserDao) Save(user User) error {
 	return dao.getDBCollection().Insert(user)
 }
 
+func (dao *UserDao) SaveWithPassword(user UserWithPassword) error {
+	return dao.getDBCollection().Insert(user)
+}
+
 func (dao *UserDao) getDBConnection() *mgo.Database {
 	return dao.session.Clone().DB(dao.dbName)
 }
@@ -52,4 +56,8 @@ func (dao *UserDao) GetPassword(id bson.ObjectId) (string, error) {
 	var result bson.M
 	err := dao.getDBCollection().FindId(id).Select(bson.M{"password": 1}).One(&result)
 	return result["password"].(string), err
+}
+
+func (dao *UserDao) Update(user User) error {
+	return dao.getDBCollection().UpdateId(user.ID, user)
 }

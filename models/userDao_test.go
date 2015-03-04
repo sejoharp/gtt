@@ -116,4 +116,28 @@ var _ = Describe("UserDao", func() {
 		Expect(err).To(BeNil())
 		Expect(hash).To(Equal(passwordHash))
 	})
+
+	It("should save a user with password.", func() {
+		user := NewMinimalUserWithPassword(name, worktime, "password")
+
+		Expect(dao.SaveWithPassword(user)).To(Succeed())
+
+		var persistedUser UserWithPassword
+		err := collection.Find(bson.M{"name": user.Name}).One(&persistedUser)
+		Expect(err).To(BeNil())
+		Expect(persistedUser.EqualsWithoutID(user)).To(BeTrue())
+	})
+
+	It("should change the overtime of a user.", func() {
+		dao.Save(newUserWithoutID)
+		persistedUser, _ := dao.FindByName(newUserWithoutID.Name)
+
+		persistedUser.Name = "newName"
+		Expect(dao.Update(persistedUser)).To(Succeed())
+
+		changedUser, updateErr := dao.FindByID(persistedUser.ID)
+		Expect(updateErr).To(BeNil())
+
+		Expect(changedUser.EqualsWithoutID(persistedUser)).To(BeTrue())
+	})
 })
