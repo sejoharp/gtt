@@ -21,8 +21,8 @@ type UserWithPassword struct {
 	Password string
 }
 
-func NewMinimalUserWithPassword(name string, worktime time.Duration, password string) UserWithPassword {
-	return UserWithPassword{Name: name, Worktime: worktime, Overtime: 0, Password: password}
+func NewMinimalUserWithPassword(name string, worktime time.Duration, password []byte) UserWithPassword {
+	return UserWithPassword{Name: name, Worktime: worktime, Overtime: 0, Password: string(password)}
 }
 
 func NewMinimalUser(name string, worktime time.Duration) User {

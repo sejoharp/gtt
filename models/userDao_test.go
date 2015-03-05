@@ -118,7 +118,7 @@ var _ = Describe("UserDao", func() {
 	})
 
 	It("should save a user with password.", func() {
-		user := NewMinimalUserWithPassword(name, worktime, "password")
+		user := NewMinimalUserWithPassword(name, worktime, []byte("password"))
 
 		Expect(dao.SaveWithPassword(user)).To(Succeed())
 
