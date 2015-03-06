@@ -16,7 +16,7 @@ var _ = Describe("IntervalDao", func() {
 
 	var (
 		collection             *mgo.Collection
-		dao                    *IntervalDao
+		dao                    IntervalDao
 		userID                 bson.ObjectId
 		userID2                bson.ObjectId
 		newInterval            Interval

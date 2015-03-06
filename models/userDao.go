@@ -3,61 +3,72 @@ package models
 import "gopkg.in/mgo.v2"
 import "gopkg.in/mgo.v2/bson"
 
-type UserDao struct {
+type UserDao interface {
+	Save(user User) error
+	SaveWithPassword(user UserWithPassword) error
+	FindByID(id bson.ObjectId) (User, error)
+	FindByName(name string) (User, error)
+	AddPassword(id bson.ObjectId, password string) error
+	AddPasswordByUser(username string, password string) error
+	GetPassword(id bson.ObjectId) (string, error)
+	Update(user User) error
+}
+
+type UserDaoImpl struct {
 	dbName         string
 	collectionName string
 	session        *mgo.Session
 }
 
-func NewUserDao(session *mgo.Session, dbName string) *UserDao {
-	return &UserDao{session: session, dbName: dbName, collectionName: "users"}
+func NewUserDao(session *mgo.Session, dbName string) UserDao {
+	return &UserDaoImpl{session: session, dbName: dbName, collectionName: "users"}
 }
 
-func (dao *UserDao) Save(user User) error {
+func (dao *UserDaoImpl) Save(user User) error {
 	return dao.getDBCollection().Insert(user)
 }
 
-func (dao *UserDao) SaveWithPassword(user UserWithPassword) error {
+func (dao *UserDaoImpl) SaveWithPassword(user UserWithPassword) error {
 	return dao.getDBCollection().Insert(user)
 }
 
-func (dao *UserDao) getDBConnection() *mgo.Database {
+func (dao *UserDaoImpl) getDBConnection() *mgo.Database {
 	return dao.session.Clone().DB(dao.dbName)
 }
 
-func (dao *UserDao) getDBCollection() *mgo.Collection {
+func (dao *UserDaoImpl) getDBCollection() *mgo.Collection {
 	return dao.getDBConnection().C(dao.collectionName)
 }
 
-func (dao *UserDao) FindByID(id bson.ObjectId) (User, error) {
+func (dao *UserDaoImpl) FindByID(id bson.ObjectId) (User, error) {
 	var user User
 	err := dao.getDBCollection().FindId(id).One(&user)
 	return user, err
 }
 
-func (dao *UserDao) FindByName(name string) (User, error) {
+func (dao *UserDaoImpl) FindByName(name string) (User, error) {
 	var user User
 	err := dao.getDBCollection().Find(bson.M{"name": name}).One(&user)
 	return user, err
 }
 
-func (dao *UserDao) AddPassword(id bson.ObjectId, password string) error {
+func (dao *UserDaoImpl) AddPassword(id bson.ObjectId, password string) error {
 	change := bson.M{"$set": bson.M{"password": password}}
 	return dao.getDBCollection().UpdateId(id, change)
 }
 
-func (dao *UserDao) AddPasswordByUser(username string, password string) error {
+func (dao *UserDaoImpl) AddPasswordByUser(username string, password string) error {
 	change := bson.M{"$set": bson.M{"password": password}}
 	query := bson.M{"name": username}
 	return dao.getDBCollection().Update(query, change)
 }
 
-func (dao *UserDao) GetPassword(id bson.ObjectId) (string, error) {
+func (dao *UserDaoImpl) GetPassword(id bson.ObjectId) (string, error) {
 	var result bson.M
 	err := dao.getDBCollection().FindId(id).Select(bson.M{"password": 1}).One(&result)
 	return result["password"].(string), err
 }
 
-func (dao *UserDao) Update(user User) error {
+func (dao *UserDaoImpl) Update(user User) error {
 	return dao.getDBCollection().UpdateId(user.ID, user)
 }

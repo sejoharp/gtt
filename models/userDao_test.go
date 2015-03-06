@@ -16,7 +16,7 @@ var _ = Describe("UserDao", func() {
 
 	var (
 		collection       *mgo.Collection
-		dao              *UserDao
+		dao              UserDao
 		id               bson.ObjectId
 		name             string
 		worktime         time.Duration
