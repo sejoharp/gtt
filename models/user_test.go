@@ -25,6 +25,13 @@ var _ = Describe("User", func() {
 		Expect(user1.EqualsWithoutID(user1)).To(BeTrue())
 	})
 
+	It("should detect different passwords.", func() {
+		user1WithPassword := NewMinimalUserWithPassword(name, worktime, []byte("password"))
+		user2WithPassword := NewMinimalUserWithPassword(name, worktime, []byte("secret"))
+
+		Expect(user1WithPassword.EqualsWithoutID(user2WithPassword)).To(BeFalse())
+	})
+
 	It("should detect different overtimes.", func() {
 		Expect(user1.EqualsWithoutID(user2)).To(BeFalse())
 	})

@@ -78,11 +78,11 @@ var _ = Describe("UserController", func() {
 		Expect(responseRecorder.Code).To(Equal(http.StatusNotAcceptable))
 	})
 	It("should cancel registration due to a hashing error.", func() {
-		jsonRequest := `"{username":"peter", "password":"secret", "workTime":"2h"}`
+		jsonRequest := `{"username":"peter", "password":"secret", "workTime":"2h"}`
 		httpRequest, _ := http.NewRequest("GET", "localhost", strings.NewReader(jsonRequest))
 		userDao.On("FindByName", mock.Anything).Return(User{}, errors.New("not existing"))
 		userDao.On("SaveWithPassword", mock.Anything).Return(nil)
-		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), errors.New("error while hashing"))
+		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), errors.New("hashing error"))
 
 		userController.Register(context, responseRecorder, httpRequest)
 

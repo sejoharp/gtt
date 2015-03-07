@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"errors"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"gopkg.in/mgo.v2"
@@ -128,6 +130,11 @@ var _ = Describe("IntervalDao", func() {
 		Expect(openIntervals).To(HaveLen(1))
 		Expect(openIntervals[0].Start).NotTo(BeZero())
 		Expect(openIntervals[0].Stop).To(BeZero())
+	})
+
+	It("should return an error when stop gets an error.", func() {
+		findErr := checkStopErrors([]Interval{}, errors.New("error while processing"))
+		Expect(findErr).To(MatchError(errors.New("error while processing")))
 	})
 
 	It("should return an error when stop does not find an open interval.", func() {
