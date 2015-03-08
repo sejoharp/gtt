@@ -140,4 +140,23 @@ var _ = Describe("UserDao", func() {
 
 		Expect(changedUser.EqualsWithoutID(persistedUser)).To(BeTrue())
 	})
+
+	It("should return the password hash from a user.", func() {
+		user := NewMinimalUserWithPassword(name, worktime, []byte("password"))
+		Expect(dao.SaveWithPassword(user)).To(Succeed())
+
+		hash, err := dao.GetPasswordByUser((user.Name))
+
+		Expect(err).To(BeNil())
+		Expect(hash).To(Equal(user.Password))
+	})
+
+	It("should return an error when user does not exist.", func() {
+		user := NewMinimalUserWithPassword(name, worktime, []byte("password"))
+		Expect(dao.SaveWithPassword(user)).To(Succeed())
+
+		_, err := dao.GetPasswordByUser(("myname"))
+
+		Expect(err).To(HaveOccurred())
+	})
 })

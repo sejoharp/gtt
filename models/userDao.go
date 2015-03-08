@@ -11,6 +11,7 @@ type UserDao interface {
 	AddPassword(id bson.ObjectId, password string) error
 	AddPasswordByUser(username string, password string) error
 	GetPassword(id bson.ObjectId) (string, error)
+	GetPasswordByUser(username string) (string, error)
 	Update(user User) error
 }
 
@@ -71,4 +72,11 @@ func (dao *UserDaoImpl) GetPassword(id bson.ObjectId) (string, error) {
 
 func (dao *UserDaoImpl) Update(user User) error {
 	return dao.getDBCollection().UpdateId(user.ID, user)
+}
+
+func (dao *UserDaoImpl) GetPasswordByUser(username string) (string, error) {
+	var result bson.M
+	query := bson.M{"name": username}
+	err := dao.getDBCollection().Find(query).Select(bson.M{"password": 1}).One(&result)
+	return result["password"].(string), err
 }
