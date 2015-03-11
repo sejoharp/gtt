@@ -11,6 +11,7 @@ import (
 
 type UserController interface {
 	Register(c web.C, w http.ResponseWriter, r *http.Request)
+	GetToken(c web.C, w http.ResponseWriter, r *http.Request)
 }
 
 type UserControllerImpl struct {
@@ -33,6 +34,10 @@ func (controller *UserControllerImpl) Register(c web.C, w http.ResponseWriter, r
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (controller *UserControllerImpl) GetToken(c web.C, w http.ResponseWriter, r *http.Request) {
+
 }
 
 func (controller *UserControllerImpl) isRegisterRequestValid(request *http.Request) bool {
