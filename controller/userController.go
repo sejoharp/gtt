@@ -14,12 +14,13 @@ type UserController interface {
 }
 
 type UserControllerImpl struct {
-	userDao models.UserDao
-	crypter Crypter
+	userDao   models.UserDao
+	crypter   Crypter
+	tokenizer Tokenizer
 }
 
-func NewUserController(userDao models.UserDao, crypter Crypter) UserController {
-	return &UserControllerImpl{userDao, crypter}
+func NewUserController(userDao models.UserDao, crypter Crypter, tokenizer Tokenizer) UserController {
+	return &UserControllerImpl{userDao, crypter, tokenizer}
 }
 
 func (controller *UserControllerImpl) Register(c web.C, w http.ResponseWriter, r *http.Request) {

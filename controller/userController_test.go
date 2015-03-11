@@ -19,6 +19,7 @@ var _ = Describe("UserController", func() {
 	var (
 		userDao          *UserDaoMock
 		crypter          *CrypterMock
+		tokenizer        *TokenizerMock
 		userController   UserController
 		responseRecorder *httptest.ResponseRecorder
 		context          web.C
@@ -27,7 +28,8 @@ var _ = Describe("UserController", func() {
 	BeforeEach(func() {
 		crypter = new(CrypterMock)
 		userDao = new(UserDaoMock)
-		userController = NewUserController(userDao, crypter)
+		tokenizer = new(TokenizerMock)
+		userController = NewUserController(userDao, crypter, tokenizer)
 		responseRecorder = httptest.NewRecorder()
 		context = web.C{}
 	})
@@ -99,6 +101,38 @@ var _ = Describe("UserController", func() {
 
 		Expect(responseRecorder.Code).To(Equal(http.StatusNotAcceptable))
 	})
+
+	It("should return a token.", func() {
+		jsonRequest := `{"username":"peter", "password":"secret"}`
+		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
+		userDao.On("GetPasswordByUser", mock.Anything).Return("secret", nil)
+		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
+
+		userController.GetToken(context, responseRecorder, httpRequest)
+
+		Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
+	})
+
+	It("should return an error when password is wrong.", func() {
+		jsonRequest := `{"username":"peter", "password":"secret"}`
+		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
+		userDao.On("GetPasswordByUser", mock.Anything).Return("realy secret", nil)
+		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(false)
+
+		userController.GetToken(context, responseRecorder, httpRequest)
+
+		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+	})
+
+	It("should return an error when getting the password fails.", func() {
+		jsonRequest := `{"username":"peter", "password":"secret"}`
+		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
+		userDao.On("GetPasswordByUser", mock.Anything).Return("", errors.New("database down"))
+
+		userController.GetToken(context, responseRecorder, httpRequest)
+
+		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+	})
 })
 
 type CrypterMock struct {
@@ -154,7 +188,26 @@ func (mock UserDaoMock) GetPassword(id bson.ObjectId) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
+func (mock UserDaoMock) GetPasswordByUser(username string) (string, error) {
+	args := mock.Called(username)
+	return args.String(0), args.Error(1)
+}
+
 func (mock UserDaoMock) Update(user User) error {
 	args := mock.Called(user)
 	return args.Error(0)
+}
+
+type TokenizerMock struct {
+	mock.Mock
+}
+
+func (mock TokenizerMock) generate(userId string) (string, error) {
+	args := mock.Called(userId)
+	return args.String(0), args.Error(1)
+}
+
+func (mock TokenizerMock) parse(tokenString string) (string, error) {
+	args := mock.Called(tokenString)
+	return args.String(0), args.Error(1)
 }
