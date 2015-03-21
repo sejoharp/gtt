@@ -111,7 +111,7 @@ var _ = Describe("UserController", func() {
 		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
 		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
 		userDao.On("FindByName", mock.Anything).Return(user, nil)
-		userDao.On("GetPasswordByUser", user.Name).Return("secret", nil)
+		userDao.On("GetPasswordByUser", user.Name).Return([]byte("secret"), nil)
 		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
 		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
 		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
@@ -128,8 +128,12 @@ var _ = Describe("UserController", func() {
 	It("should return an error when password is wrong.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret"}`
 		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
-		userDao.On("GetPasswordByUser", mock.Anything).Return("realy secret", nil)
+		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
+		userDao.On("FindByName", mock.Anything).Return(user, nil)
+		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte("realy secret"), nil)
 		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(false)
+		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
+		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
@@ -139,7 +143,7 @@ var _ = Describe("UserController", func() {
 	It("should return an error when the user is unknown.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret"}`
 		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
-		userDao.On("GetPasswordByUser", mock.Anything).Return("", errors.New("no data found"))
+		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte(""), errors.New("no data found"))
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
@@ -185,24 +189,24 @@ func (mock UserDaoMock) FindByName(name string) (User, error) {
 	return args.Get(0).(User), args.Error(1)
 }
 
-func (mock UserDaoMock) AddPassword(id bson.ObjectId, password string) error {
+func (mock UserDaoMock) AddPassword(id bson.ObjectId, password []byte) error {
 	args := mock.Called(id, password)
 	return args.Error(0)
 }
 
-func (mock UserDaoMock) AddPasswordByUser(username string, password string) error {
+func (mock UserDaoMock) AddPasswordByUser(username string, password []byte) error {
 	args := mock.Called(username, password)
 	return args.Error(0)
 }
 
-func (mock UserDaoMock) GetPassword(id bson.ObjectId) (string, error) {
+func (mock UserDaoMock) GetPassword(id bson.ObjectId) ([]byte, error) {
 	args := mock.Called(id)
-	return args.String(0), args.Error(1)
+	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mock UserDaoMock) GetPasswordByUser(username string) (string, error) {
+func (mock UserDaoMock) GetPasswordByUser(username string) ([]byte, error) {
 	args := mock.Called(username)
-	return args.String(0), args.Error(1)
+	return args.Get(0).([]byte), args.Error(1)
 }
 
 func (mock UserDaoMock) Update(user User) error {
@@ -214,8 +218,8 @@ type TokenizerMock struct {
 	mock.Mock
 }
 
-func (mock TokenizerMock) generate(userId string, expirationDate time.Time) (string, error) {
-	args := mock.Called(userId, expirationDate)
+func (mock TokenizerMock) generate(userID string, expirationDate time.Time) (string, error) {
+	args := mock.Called(userID, expirationDate)
 	return args.String(0), args.Error(1)
 }
 

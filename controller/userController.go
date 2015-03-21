@@ -61,26 +61,28 @@ func (controller *UserControllerImpl) GetToken(c web.C, w http.ResponseWriter, r
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	if controller.crypter.isSamePassword(hash, []byte(password)) {
-		user, err := controller.userDao.FindByName(credentials.Username)
-		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		expirationDate := time.Now().Add(time.Hour * 72)
-		token, tokenErr := controller.tokenizer.generate(user.ID.Hex(), expirationDate)
-		if tokenErr != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		response, marshalErr := json.Marshal(map[string]string{"token": token})
-		if marshalErr != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		w.Write(response)
-		w.WriteHeader(http.StatusOK)
+	if controller.crypter.isSamePassword(hash, []byte(password)) == false {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
+	user, err := controller.userDao.FindByName(credentials.Username)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	expirationDate := time.Now().Add(time.Hour * 72)
+	token, tokenErr := controller.tokenizer.generate(user.ID.Hex(), expirationDate)
+	if tokenErr != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	response, marshalErr := json.Marshal(map[string]string{"token": token})
+	if marshalErr != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	w.Write(response)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (controller *UserControllerImpl) isRegisterRequestValid(request *http.Request) bool {
