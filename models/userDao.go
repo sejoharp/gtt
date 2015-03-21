@@ -8,10 +8,10 @@ type UserDao interface {
 	SaveWithPassword(user UserWithPassword) error
 	FindByID(id bson.ObjectId) (User, error)
 	FindByName(name string) (User, error)
-	AddPassword(id bson.ObjectId, password string) error
-	AddPasswordByUser(username string, password string) error
-	GetPassword(id bson.ObjectId) (string, error)
-	GetPasswordByUser(username string) (string, error)
+	AddPassword(id bson.ObjectId, password []byte) error
+	AddPasswordByUser(username string, password []byte) error
+	GetPassword(id bson.ObjectId) ([]byte, error)
+	GetPasswordByUser(username string) ([]byte, error)
 	Update(user User) error
 }
 
@@ -53,30 +53,36 @@ func (dao *UserDaoImpl) FindByName(name string) (User, error) {
 	return user, err
 }
 
-func (dao *UserDaoImpl) AddPassword(id bson.ObjectId, password string) error {
-	change := bson.M{"$set": bson.M{"password": password}}
+func (dao *UserDaoImpl) AddPassword(id bson.ObjectId, password []byte) error {
+	change := bson.M{"$set": bson.M{"password": string(password)}}
 	return dao.getDBCollection().UpdateId(id, change)
 }
 
-func (dao *UserDaoImpl) AddPasswordByUser(username string, password string) error {
-	change := bson.M{"$set": bson.M{"password": password}}
+func (dao *UserDaoImpl) AddPasswordByUser(username string, password []byte) error {
+	change := bson.M{"$set": bson.M{"password": string(password)}}
 	query := bson.M{"name": username}
 	return dao.getDBCollection().Update(query, change)
 }
 
-func (dao *UserDaoImpl) GetPassword(id bson.ObjectId) (string, error) {
+func (dao *UserDaoImpl) GetPassword(id bson.ObjectId) ([]byte, error) {
 	var result bson.M
 	err := dao.getDBCollection().FindId(id).Select(bson.M{"password": 1}).One(&result)
-	return result["password"].(string), err
+	if err != nil {
+		return []byte(""), err
+	}
+	return []byte(result["password"].(string)), err
 }
 
 func (dao *UserDaoImpl) Update(user User) error {
 	return dao.getDBCollection().UpdateId(user.ID, user)
 }
 
-func (dao *UserDaoImpl) GetPasswordByUser(username string) (string, error) {
+func (dao *UserDaoImpl) GetPasswordByUser(username string) ([]byte, error) {
 	var result bson.M
 	query := bson.M{"name": username}
 	err := dao.getDBCollection().Find(query).Select(bson.M{"password": 1}).One(&result)
-	return result["password"].(string), err
+	if err != nil {
+		return []byte(""), err
+	}
+	return []byte(result["password"].(string)), err
 }

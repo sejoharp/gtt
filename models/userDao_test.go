@@ -12,7 +12,6 @@ import (
 var _ = Describe("UserDao", func() {
 	const dbName = "timetracker"
 	const collectionName = "users"
-	const passwordHash = "3!aYBlA994"
 
 	var (
 		collection       *mgo.Collection
@@ -24,6 +23,7 @@ var _ = Describe("UserDao", func() {
 		oldUser          User
 		oldUserWithoutID User
 		newUserWithoutID User
+		passwordHash     []byte
 	)
 
 	BeforeEach(func() {
@@ -34,6 +34,7 @@ var _ = Describe("UserDao", func() {
 
 		dao = NewUserDao(session, dbName)
 
+		passwordHash = []byte("3!aYBlA994")
 		id = bson.NewObjectId()
 		name = "myuser"
 		worktime, _ = time.ParseDuration("7h45m")
@@ -93,7 +94,7 @@ var _ = Describe("UserDao", func() {
 		var result bson.M
 		err := collection.FindId(oldUser.ID).Select(bson.M{"password": 1}).One(&result)
 		Expect(err).To(BeNil())
-		Expect(result["password"]).To(Equal(passwordHash))
+		Expect(result["password"]).To(Equal(string(passwordHash)))
 	})
 
 	It("should add a password hash to a user.", func() {
@@ -104,7 +105,7 @@ var _ = Describe("UserDao", func() {
 		var result bson.M
 		err := collection.FindId(oldUser.ID).Select(bson.M{"password": 1}).One(&result)
 		Expect(err).To(BeNil())
-		Expect(result["password"]).To(Equal(passwordHash))
+		Expect(result["password"]).To(Equal(string(passwordHash)))
 	})
 
 	It("should return the password hash from a user.", func() {
@@ -148,14 +149,14 @@ var _ = Describe("UserDao", func() {
 		hash, err := dao.GetPasswordByUser((user.Name))
 
 		Expect(err).To(BeNil())
-		Expect(hash).To(Equal(user.Password))
+		Expect(hash).To(Equal([]byte(user.Password)))
 	})
 
 	It("should return an error when user does not exist.", func() {
 		user := NewMinimalUserWithPassword(name, worktime, []byte("password"))
 		Expect(dao.SaveWithPassword(user)).To(Succeed())
 
-		_, err := dao.GetPasswordByUser(("myname"))
+		_, err := dao.GetPasswordByUser("myname")
 
 		Expect(err).To(HaveOccurred())
 	})
