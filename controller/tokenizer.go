@@ -3,12 +3,14 @@ package controller
 import (
 	"time"
 
+	"net/http"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
 type Tokenizer interface {
-	generate(userId string) (string, error)
-	parse(tokenString string) (string, error)
+	generate(userId string, expirationDate time.Time) (string, error)
+	parse(request *http.Request) (string, error)
 }
 
 type TokenizerImpl struct {
@@ -19,15 +21,15 @@ func NewTokenizer(key []byte) Tokenizer {
 	return &TokenizerImpl{key}
 }
 
-func (tokenizer *TokenizerImpl) generate(userId string) (string, error) {
+func (tokenizer *TokenizerImpl) generate(userId string, expirationDate time.Time) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	token.Claims["id"] = userId
-	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	token.Claims["exp"] = expirationDate.Unix()
 	return token.SignedString(tokenizer.key)
 }
 
-func (tokenizer *TokenizerImpl) parse(tokenString string) (string, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func (tokenizer *TokenizerImpl) parse(request *http.Request) (string, error) {
+	token, err := jwt.ParseFromRequest(request, func(token *jwt.Token) (interface{}, error) {
 		return tokenizer.key, nil
 	})
 	return token.Claims["id"].(string), err
