@@ -33,7 +33,7 @@ func (controller *UserControllerImpl) Register(c web.C, w http.ResponseWriter, r
 		w.WriteHeader(http.StatusNotAcceptable)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (controller *UserControllerImpl) GetToken(c web.C, w http.ResponseWriter, r *http.Request) {

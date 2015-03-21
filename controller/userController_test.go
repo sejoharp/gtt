@@ -43,7 +43,7 @@ var _ = Describe("UserController", func() {
 
 		userController.Register(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
+		Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 	})
 
 	It("should detect invalid register request - user exists.", func() {
