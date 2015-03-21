@@ -7,6 +7,10 @@ import (
 
 	"errors"
 
+	"time"
+
+	"encoding/json"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/mock"
@@ -105,12 +109,20 @@ var _ = Describe("UserController", func() {
 	It("should return a token.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret"}`
 		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
-		userDao.On("GetPasswordByUser", mock.Anything).Return("secret", nil)
+		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
+		userDao.On("FindByName", mock.Anything).Return(user, nil)
+		userDao.On("GetPasswordByUser", user.Name).Return("secret", nil)
 		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
+		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
+		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
+		Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+		var responseMap map[string]string
+		err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseMap)
+		Expect(err).To(BeNil())
+		Expect(responseMap["token"]).To(Equal("tokenString"))
 	})
 
 	It("should return an error when password is wrong.", func() {
@@ -124,10 +136,10 @@ var _ = Describe("UserController", func() {
 		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
 	})
 
-	It("should return an error when getting the password fails.", func() {
+	It("should return an error when the user is unknown.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret"}`
 		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
-		userDao.On("GetPasswordByUser", mock.Anything).Return("", errors.New("database down"))
+		userDao.On("GetPasswordByUser", mock.Anything).Return("", errors.New("no data found"))
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
@@ -202,12 +214,12 @@ type TokenizerMock struct {
 	mock.Mock
 }
 
-func (mock TokenizerMock) generate(userId string) (string, error) {
-	args := mock.Called(userId)
+func (mock TokenizerMock) generate(userId string, expirationDate time.Time) (string, error) {
+	args := mock.Called(userId, expirationDate)
 	return args.String(0), args.Error(1)
 }
 
-func (mock TokenizerMock) parse(tokenString string) (string, error) {
-	args := mock.Called(tokenString)
+func (mock TokenizerMock) parse(request *http.Request) (string, error) {
+	args := mock.Called(request)
 	return args.String(0), args.Error(1)
 }
