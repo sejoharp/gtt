@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"errors"
+
 	"github.com/zenazn/goji/web"
 	"github.com/zippelmann/gtt/models"
 )
@@ -40,33 +42,18 @@ func (controller *UserControllerImpl) Register(c web.C, w http.ResponseWriter, r
 }
 
 func (controller *UserControllerImpl) GetToken(c web.C, w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
+	credentials, parsingErr := parseGetTokenRequest(r)
+	if parsingErr != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	credentials := new(Credentials)
-	parseErr := json.Unmarshal(body, credentials)
-	if parseErr != nil {
+	user, FindUserErr := controller.userDao.FindByName(credentials.Username)
+	if FindUserErr != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	password, getPasswordErr := controller.userDao.GetPasswordByUser(credentials.Username)
-	if getPasswordErr != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	hash, hashErr := controller.crypter.generateHash([]byte(credentials.Password))
-	if hashErr != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	if controller.crypter.isSamePassword(hash, []byte(password)) == false {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	user, err := controller.userDao.FindByName(credentials.Username)
-	if err != nil {
+	passwordErr := controller.checkPassword(credentials)
+	if passwordErr != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -83,6 +70,31 @@ func (controller *UserControllerImpl) GetToken(c web.C, w http.ResponseWriter, r
 	}
 	w.Write(response)
 	w.WriteHeader(http.StatusOK)
+}
+
+func parseGetTokenRequest(r *http.Request) (Credentials, error) {
+	credentials := Credentials{}
+	body, readErr := ioutil.ReadAll(r.Body)
+	if readErr != nil {
+		return credentials, readErr
+	}
+	parseErr := json.Unmarshal(body, &credentials)
+	if parseErr != nil {
+		return credentials, parseErr
+	}
+	return credentials, nil
+}
+
+func (controller *UserControllerImpl) checkPassword(credentials Credentials) error {
+	password, getPasswordErr := controller.userDao.GetPasswordByUser(credentials.Username)
+	if getPasswordErr != nil {
+		return errors.New("user unknown")
+	}
+	hash, hashErr := controller.crypter.generateHash([]byte(credentials.Password))
+	if hashErr != nil {
+		return errors.New("creating hash failed")
+	}
+	return controller.crypter.checkPassword(hash, []byte(password))
 }
 
 func (controller *UserControllerImpl) isRegisterRequestValid(request *http.Request) bool {

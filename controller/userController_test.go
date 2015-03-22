@@ -112,7 +112,7 @@ var _ = Describe("UserController", func() {
 		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
 		userDao.On("FindByName", mock.Anything).Return(user, nil)
 		userDao.On("GetPasswordByUser", user.Name).Return([]byte("secret"), nil)
-		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
+		crypter.On("checkPassword", mock.Anything, mock.Anything).Return(nil)
 		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
 		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
 
@@ -131,7 +131,7 @@ var _ = Describe("UserController", func() {
 		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
 		userDao.On("FindByName", mock.Anything).Return(user, nil)
 		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte("realy secret"), nil)
-		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(false)
+		crypter.On("checkPassword", mock.Anything, mock.Anything).Return(errors.New("password wrong"))
 		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
 		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
 
@@ -143,7 +143,7 @@ var _ = Describe("UserController", func() {
 	It("should return an error when the user is unknown.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret"}`
 		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
-		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte(""), errors.New("no data found"))
+		userDao.On("FindByName", mock.Anything).Return(User{}, errors.New("user unknown"))
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
@@ -156,7 +156,7 @@ var _ = Describe("UserController", func() {
 		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
 		userDao.On("FindByName", mock.Anything).Return(user, nil)
 		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte("realy secret"), nil)
-		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
+		crypter.On("checkPassword", mock.Anything, mock.Anything).Return(nil)
 		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), errors.New("crypting password failed"))
 		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
 
@@ -171,7 +171,7 @@ var _ = Describe("UserController", func() {
 		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
 		userDao.On("FindByName", mock.Anything).Return(user, errors.New("user unknown"))
 		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte("realy secret"), nil)
-		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
+		crypter.On("checkPassword", mock.Anything, mock.Anything).Return(nil)
 		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
 		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
 
@@ -186,7 +186,7 @@ var _ = Describe("UserController", func() {
 		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
 		userDao.On("FindByName", mock.Anything).Return(user, nil)
 		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte("realy secret"), nil)
-		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
+		crypter.On("checkPassword", mock.Anything, mock.Anything).Return(nil)
 		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
 		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", errors.New("creating token failed"))
 
@@ -195,13 +195,22 @@ var _ = Describe("UserController", func() {
 		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
 	})
 
+	It("should detect an invalid json request.", func() {
+		jsonRequest := `{"username":"peter", "password":"secret"`
+		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
+
+		_, err := parseGetTokenRequest(httpRequest)
+
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("should return an error when json is invalid.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret"`
 		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
 		user := NewPersistedMinimalUser(bson.NewObjectId(), "peter", 0)
 		userDao.On("FindByName", mock.Anything).Return(user, nil)
 		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte("realy secret"), nil)
-		crypter.On("isSamePassword", mock.Anything, mock.Anything).Return(true)
+		crypter.On("checkPassword", mock.Anything, mock.Anything).Return(nil)
 		crypter.On("generateHash", mock.Anything).Return([]byte("hashedPassword"), nil)
 		tokenizer.On("generate", user.ID.Hex(), mock.Anything).Return("tokenString", nil)
 
@@ -220,9 +229,9 @@ func (mock CrypterMock) generateHash(password []byte) ([]byte, error) {
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mock CrypterMock) isSamePassword(hash, password []byte) bool {
+func (mock CrypterMock) checkPassword(hash, password []byte) error {
 	args := mock.Called(hash, password)
-	return args.Bool(0)
+	return args.Error(0)
 }
 
 type UserDaoMock struct {
