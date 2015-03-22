@@ -153,10 +153,13 @@ var _ = Describe("UserDao", func() {
 	})
 
 	It("should return an error when user does not exist.", func() {
-		user := NewMinimalUserWithPassword(name, worktime, []byte("password"))
-		Expect(dao.SaveWithPassword(user)).To(Succeed())
-
 		_, err := dao.GetPasswordByUser("myname")
+
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("should return an error when user does not exist.", func() {
+		_, err := dao.GetPassword(bson.NewObjectId())
 
 		Expect(err).To(HaveOccurred())
 	})
