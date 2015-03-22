@@ -2,6 +2,9 @@ language: go
 go:
   - 1.4
 
+services:
+  - mongodb
+
 install:
   - go get -v -t ./...
   - go get github.com/axw/gocov/gocov
@@ -18,6 +21,3 @@ script:
 after_success:
   - gover
   - goveralls -coverprofile=gover.coverprofile -service=travis-ci
-
-services:
-  - mongodb
