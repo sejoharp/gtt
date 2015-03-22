@@ -4,7 +4,7 @@ import "golang.org/x/crypto/bcrypt"
 
 type Crypter interface {
 	generateHash(password []byte) ([]byte, error)
-	isSamePassword(hash, password []byte) bool
+	checkPassword(hash, password []byte) error
 }
 
 type CrypterImpl struct {
@@ -20,6 +20,6 @@ func (crypter *CrypterImpl) generateHash(password []byte) ([]byte, error) {
 	return bcrypt.GenerateFromPassword(completePassword, 10)
 }
 
-func (crypter *CrypterImpl) isSamePassword(hash, password []byte) bool {
-	return bcrypt.CompareHashAndPassword(hash, password) == nil
+func (crypter *CrypterImpl) checkPassword(hash, password []byte) error {
+	return bcrypt.CompareHashAndPassword(hash, password)
 }

@@ -15,6 +15,6 @@ var _ = Describe("Cryper", func() {
 
 		Expect(err).To(Succeed())
 		completePassword := append(salt, password...)
-		Expect(crypter.isSamePassword(passwordHash, completePassword)).To(BeTrue())
+		Expect(crypter.checkPassword(passwordHash, completePassword)).To(BeNil())
 	})
 })
