@@ -224,12 +224,12 @@ type CrypterMock struct {
 	mock.Mock
 }
 
-func (mock CrypterMock) generateHash(password []byte) ([]byte, error) {
+func (mock *CrypterMock) generateHash(password []byte) ([]byte, error) {
 	args := mock.Called(password)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mock CrypterMock) checkPassword(hash, password []byte) error {
+func (mock *CrypterMock) checkPassword(hash, password []byte) error {
 	args := mock.Called(hash, password)
 	return args.Error(0)
 }
@@ -238,47 +238,47 @@ type UserDaoMock struct {
 	mock.Mock
 }
 
-func (mock UserDaoMock) Save(user User) error {
+func (mock *UserDaoMock) Save(user User) error {
 	args := mock.Called(user)
 	return args.Error(0)
 }
 
-func (mock UserDaoMock) SaveWithPassword(user UserWithPassword) error {
+func (mock *UserDaoMock) SaveWithPassword(user UserWithPassword) error {
 	args := mock.Called(user)
 	return args.Error(0)
 }
 
-func (mock UserDaoMock) FindByID(id bson.ObjectId) (User, error) {
+func (mock *UserDaoMock) FindByID(id bson.ObjectId) (User, error) {
 	args := mock.Called(id)
 	return args.Get(0).(User), args.Error(1)
 }
 
-func (mock UserDaoMock) FindByName(name string) (User, error) {
+func (mock *UserDaoMock) FindByName(name string) (User, error) {
 	args := mock.Called(name)
 	return args.Get(0).(User), args.Error(1)
 }
 
-func (mock UserDaoMock) AddPassword(id bson.ObjectId, password []byte) error {
+func (mock *UserDaoMock) AddPassword(id bson.ObjectId, password []byte) error {
 	args := mock.Called(id, password)
 	return args.Error(0)
 }
 
-func (mock UserDaoMock) AddPasswordByUser(username string, password []byte) error {
+func (mock *UserDaoMock) AddPasswordByUser(username string, password []byte) error {
 	args := mock.Called(username, password)
 	return args.Error(0)
 }
 
-func (mock UserDaoMock) GetPassword(id bson.ObjectId) ([]byte, error) {
+func (mock *UserDaoMock) GetPassword(id bson.ObjectId) ([]byte, error) {
 	args := mock.Called(id)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mock UserDaoMock) GetPasswordByUser(username string) ([]byte, error) {
+func (mock *UserDaoMock) GetPasswordByUser(username string) ([]byte, error) {
 	args := mock.Called(username)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mock UserDaoMock) Update(user User) error {
+func (mock *UserDaoMock) Update(user User) error {
 	args := mock.Called(user)
 	return args.Error(0)
 }
@@ -287,12 +287,12 @@ type TokenizerMock struct {
 	mock.Mock
 }
 
-func (mock TokenizerMock) generate(userID string, expirationDate time.Time) (string, error) {
+func (mock *TokenizerMock) generate(userID string, expirationDate time.Time) (string, error) {
 	args := mock.Called(userID, expirationDate)
 	return args.String(0), args.Error(1)
 }
 
-func (mock TokenizerMock) parse(request *http.Request) (string, error) {
+func (mock *TokenizerMock) parse(request *http.Request) (string, error) {
 	args := mock.Called(request)
 	return args.String(0), args.Error(1)
 }
