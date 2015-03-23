@@ -59,7 +59,7 @@ var _ = Describe("UserController", func() {
 
 		userController.Register(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusNotAcceptable))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 	It("should detect invalid register request - user too short.", func() {
 		jsonRequest := `{"username":"pet", "password":"secret", "workTime":"2h"}`
@@ -70,7 +70,7 @@ var _ = Describe("UserController", func() {
 
 		userController.Register(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusNotAcceptable))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 	It("should detect invalid register request - invalid json.", func() {
 		jsonRequest := `"username":"peter", "password":"secret", "workTime":"2h"}`
@@ -81,7 +81,7 @@ var _ = Describe("UserController", func() {
 
 		userController.Register(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusNotAcceptable))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 	It("should cancel registration due to a hashing error.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret", "workTime":"2h"}`
@@ -92,7 +92,7 @@ var _ = Describe("UserController", func() {
 
 		userController.Register(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusNotAcceptable))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 	It("should return an error when creating a user fails.", func() {
 		jsonRequest := `{"username":"peter", "password":"secret", "workTime":"2h"}`
@@ -103,7 +103,7 @@ var _ = Describe("UserController", func() {
 
 		userController.Register(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusNotAcceptable))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 
 	It("should return a token.", func() {
@@ -137,7 +137,7 @@ var _ = Describe("UserController", func() {
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 
 	It("should return an error when the user is unknown.", func() {
@@ -147,7 +147,7 @@ var _ = Describe("UserController", func() {
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 
 	It("should return an error when generating hash fails.", func() {
@@ -162,7 +162,7 @@ var _ = Describe("UserController", func() {
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 
 	It("should return an error when finding the user fails.", func() {
@@ -177,7 +177,7 @@ var _ = Describe("UserController", func() {
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 
 	It("should return an error when creating token fails.", func() {
@@ -192,7 +192,7 @@ var _ = Describe("UserController", func() {
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 
 	It("should detect an invalid json request.", func() {
@@ -216,7 +216,7 @@ var _ = Describe("UserController", func() {
 
 		userController.GetToken(context, responseRecorder, httpRequest)
 
-		Expect(responseRecorder.Code).To(Equal(http.StatusUnauthorized))
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
 })
 

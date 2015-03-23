@@ -31,11 +31,11 @@ func NewUserController(userDao models.UserDao, crypter Crypter, tokenizer Tokeni
 
 func (controller *UserControllerImpl) Register(c web.C, w http.ResponseWriter, r *http.Request) {
 	if controller.isRegisterRequestValid(r) == false {
-		w.WriteHeader(http.StatusNotAcceptable)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if saveErr := controller.createUser(r); saveErr != nil {
-		w.WriteHeader(http.StatusNotAcceptable)
+	if controller.createUser(r) != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -44,28 +44,27 @@ func (controller *UserControllerImpl) Register(c web.C, w http.ResponseWriter, r
 func (controller *UserControllerImpl) GetToken(c web.C, w http.ResponseWriter, r *http.Request) {
 	credentials, parsingErr := parseGetTokenRequest(r)
 	if parsingErr != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	user, FindUserErr := controller.userDao.FindByName(credentials.Username)
 	if FindUserErr != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	passwordErr := controller.checkPassword(credentials)
-	if passwordErr != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+	if controller.checkPassword(credentials) != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	expirationDate := time.Now().Add(time.Hour * 72)
 	token, tokenErr := controller.tokenizer.generate(user.ID.Hex(), expirationDate)
 	if tokenErr != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	response, marshalErr := json.Marshal(map[string]string{"token": token})
 	if marshalErr != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	w.Write(response)
