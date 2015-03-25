@@ -29,7 +29,7 @@ var _ = Describe("Configparser", func() {
 		intervalDao = new(IntervalDaoMock)
 		intervalController = NewIntervalController(intervalDao)
 		responseRecorder = httptest.NewRecorder()
-		context = web.C{Env: make(map[string]interface{})}
+		context = web.C{Env: make(map[interface{}]interface{})}
 		userID = bson.NewObjectId()
 		context.Env["userID"] = userID
 	})
