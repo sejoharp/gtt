@@ -31,4 +31,4 @@ coveralls: [![Coverage Status](https://coveralls.io/repos/zippelmann/gtt/badge.s
 * gcoveralls
 
 # license
-ISC license
+MIT license
