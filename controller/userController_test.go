@@ -218,6 +218,16 @@ var _ = Describe("UserController", func() {
 
 		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
+
+	It("should return an error, when user is unknown", func() {
+		userDao.On("GetPasswordByUser", mock.Anything).Return([]byte(""), errors.New("user unknown"))
+		credentials := Credentials{"peter", "secret"}
+		userControllerImpl := userController.(*UserControllerImpl)
+
+		err := userControllerImpl.checkPassword(credentials)
+
+		Expect(err).To(MatchError(errors.New("user unknown")))
+	})
 })
 
 type CrypterMock struct {
