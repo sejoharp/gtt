@@ -16,7 +16,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var _ = Describe("Configparser", func() {
+var _ = Describe("IntervalController", func() {
 	var (
 		intervalController IntervalController
 		responseRecorder   *httptest.ResponseRecorder
@@ -50,6 +50,25 @@ var _ = Describe("Configparser", func() {
 		intervalDao.On("Start", userID).Return(errors.New("db down"))
 
 		intervalController.Start(context, responseRecorder, httpRequest)
+
+		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+	})
+
+	It("should stop an interval.", func(){
+		jsonRequest := "{}"
+		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
+		intervalDao.On("Stop", userID).Return(nil)
+
+		intervalController.Stop(context, responseRecorder, httpRequest)
+		Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+	})
+
+	It("should return 400, when stopping an interval fails.", func() {
+		jsonRequest := "{}"
+		httpRequest, _ := http.NewRequest("POST", "localhost", strings.NewReader(jsonRequest))
+		intervalDao.On("Stop", userID).Return(errors.New("db down"))
+
+		intervalController.Stop(context, responseRecorder, httpRequest)
 
 		Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 	})
