@@ -7,6 +7,7 @@ import (
 
 	"fmt"
 
+	"github.com/dgrijalva/jwt-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -44,8 +45,8 @@ var _ = Describe("Tokenizer", func() {
 
 		parsedUserID, err := tokenizer.parse(httpRequest)
 
-		Expect(err).To(BeNil())
 		Expect(parsedUserID).To(Equal(userID))
+		Expect(err).To(BeNil())
 	})
 
 	It("should detect expired tokens", func() {
@@ -55,8 +56,16 @@ var _ = Describe("Tokenizer", func() {
 
 		parsedUserID, err := tokenizer.parse(httpRequest)
 
+		Expect(parsedUserID).To(BeEmpty())
 		Expect(err.Error()).To(Equal("token is expired"))
-		Expect(parsedUserID).To(Equal(userID))
 	})
 
+	It("should detect a missing token", func() {
+		httpRequest, _ := http.NewRequest("GET", "/", nil)
+
+		parsedUserID, err := tokenizer.parse(httpRequest)
+
+		Expect(parsedUserID).To(BeEmpty())
+		Expect(err).To(MatchError(jwt.ErrNoTokenInRequest))
+	})
 })

@@ -29,8 +29,14 @@ func (tokenizer *TokenizerImpl) generate(userId string, expirationDate time.Time
 }
 
 func (tokenizer *TokenizerImpl) parse(request *http.Request) (string, error) {
-	token, err := jwt.ParseFromRequest(request, func(token *jwt.Token) (interface{}, error) {
-		return tokenizer.key, nil
-	})
-	return token.Claims["id"].(string), err
+	token, err := jwt.ParseFromRequest(request, tokenizer.getTokenKey)
+	if err == nil {
+		return token.Claims["id"].(string), err
+	}
+	return "", err
+
+}
+
+func (tokenizer *TokenizerImpl) getTokenKey(token *jwt.Token) (interface{}, error) {
+	return tokenizer.key, nil
 }
