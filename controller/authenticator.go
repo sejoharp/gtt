@@ -20,11 +20,11 @@ func NewAuthController(tokenizer Tokenizer) AuthController {
 func (controller *AuthControllerImpl) authenticated(h web.HandlerFunc) web.HandlerFunc {
 	return web.HandlerFunc(func(c web.C, w http.ResponseWriter, r *http.Request) {
 		userID, err := controller.tokenizer.parse(r)
-		if err == nil {
+		if err != nil {
+			unauthorized(c, w, r)
+		} else {
 			c.Env["userID"] = userID
 			h.ServeHTTPC(c, w, r)
-		} else {
-			unauthorized(c, w, r)
 		}
 	})
 }
