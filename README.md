@@ -14,7 +14,7 @@ timetracker with golang
 * optional: installation to bin directory `go install`
 
 # status
-travis ci: [![Build Status](https://travis-ci.org/zippelmann/gtt.svg?branch=master)](https://travis-ci.org/zippelmann/gtt)
+travis ci: [![Build Status](https://travis-ci.org/sejoharp/gtt.svg?branch=master)](https://travis-ci.org/sejoharp/gtt)
 
 coveralls: [![Coverage Status](https://coveralls.io/repos/zippelmann/gtt/badge.svg)](https://coveralls.io/r/zippelmann/gtt)
 
