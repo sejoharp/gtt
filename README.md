@@ -16,7 +16,7 @@ timetracker with golang
 # status
 travis ci: [![Build Status](https://travis-ci.org/sejoharp/gtt.svg?branch=master)](https://travis-ci.org/sejoharp/gtt)
 
-coveralls: [![Coverage Status](https://coveralls.io/repos/zippelmann/gtt/badge.svg)](https://coveralls.io/r/zippelmann/gtt)
+coveralls: [![Coverage Status](https://coveralls.io/repos/sejoharp/gtt/badge.svg)](https://coveralls.io/r/sejoharp/gtt)
 
 # useful commands
 * automatic testing: `ginkgo watch -r --randomizeAllSpecs --trace --race --failFast --compilers=2 --cover --notify`
